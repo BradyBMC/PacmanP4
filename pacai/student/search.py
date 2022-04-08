@@ -1,8 +1,10 @@
+from pacai.util.stack import Stack
+
 """
 In this file, you will implement generic search algorithms which are called by Pacman agents.
 """
 
-def depthFirstSearch(problem):
+def depthFirstSearch(problem):   
     """
     Search the deepest nodes in the search tree first [p 85].
 
@@ -15,10 +17,41 @@ def depthFirstSearch(problem):
     print("Start: %s" % (str(problem.startingState())))
     print("Is the start a goal?: %s" % (problem.isGoal(problem.startingState())))
     print("Start's successors: %s" % (problem.successorStates(problem.startingState())))
+
+
+    Return list a of strings, ie actions
     ```
     """
-
     # *** Your Code Here ***
+
+    #print(type(problem))
+    #print("What is passed to the func? %s" % problem)
+    #print("Is the start a goal?: %s" % (problem.isGoal(problem.startingState())))
+    #print("Start: %s" % (str(problem.startingState())))
+    #print("Start's successors: %s" % (problem.successorStates(problem.startingState())))
+    #temp = problem.successorStates(problem.startingState())[0]
+    #print(problem.successorStates(temp[0]))
+
+    start = problem.startingState()
+    visited = []
+
+    stack = Stack()
+    stack.push((start,[]))
+
+    while (not stack.isEmpty()):
+        top = stack.pop()
+        if problem.isGoal(top[0]):
+            return top[1]
+        if top[0] in visited:
+            pass
+        visited = visited + [top[0]]
+        for neighbors in problem.successorStates(top[0]):
+            if neighbors[0] not in visited:
+                stack.push((neighbors[0],top[1] + [(neighbors[1])]))
+    
+    #Base Case
+    return ['South']
+
     raise NotImplementedError()
 
 def breadthFirstSearch(problem):
