@@ -1,4 +1,5 @@
 from pacai.util.stack import Stack
+from pacai.util.queue import Queue
 
 """
 In this file, you will implement generic search algorithms which are called by Pacman agents.
@@ -60,6 +61,22 @@ def breadthFirstSearch(problem):
     """
 
     # *** Your Code Here ***
+
+    visited = []
+    queue = Queue()
+    queue.push((problem.startingState(),[]))
+    while(not queue.isEmpty()):
+        front = queue.pop()
+        if problem.isGoal(front[0]):
+            return front[1]
+        if front[0] in visited:
+           pass
+        visited += [front[0]]
+        for neighbors in problem.successorStates(front[0]):
+            if neighbors[0] not in visited:
+                queue.push((neighbors[0],front[1] + [neighbors[1]]))
+
+
     raise NotImplementedError()
 
 def uniformCostSearch(problem):
