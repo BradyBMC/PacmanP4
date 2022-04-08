@@ -25,19 +25,11 @@ def depthFirstSearch(problem):
     """
     # *** Your Code Here ***
 
-    #print(type(problem))
-    #print("What is passed to the func? %s" % problem)
-    #print("Is the start a goal?: %s" % (problem.isGoal(problem.startingState())))
-    #print("Start: %s" % (str(problem.startingState())))
-    #print("Start's successors: %s" % (problem.successorStates(problem.startingState())))
-    #temp = problem.successorStates(problem.startingState())[0]
-    #print(problem.successorStates(temp[0]))
-
     start = problem.startingState()
     visited = []
 
     stack = Stack()
-    stack.push((start,[]))
+    stack.push((start, []))
 
     while (not stack.isEmpty()):
         top = stack.pop()
@@ -48,7 +40,7 @@ def depthFirstSearch(problem):
         visited = visited + [top[0]]
         for neighbors in problem.successorStates(top[0]):
             if neighbors[0] not in visited:
-                stack.push((neighbors[0],top[1] + [(neighbors[1])]))
+                stack.push((neighbors[0], top[1] + [(neighbors[1])]))
     
     #Base Case
     return ['South']
@@ -64,7 +56,7 @@ def breadthFirstSearch(problem):
 
     visited = []
     queue = Queue()
-    queue.push((problem.startingState(),[]))
+    queue.push((problem.startingState(), []))
     while(not queue.isEmpty()):
         front = queue.pop()
         if problem.isGoal(front[0]):
@@ -74,7 +66,7 @@ def breadthFirstSearch(problem):
         visited += [front[0]]
         for neighbors in problem.successorStates(front[0]):
             if neighbors[0] not in visited:
-                queue.push((neighbors[0],front[1] + [neighbors[1]]))
+                queue.push((neighbors[0], front[1] + [neighbors[1]]))
 
 
     raise NotImplementedError()
