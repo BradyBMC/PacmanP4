@@ -1,5 +1,6 @@
 from pacai.util.stack import Stack
 from pacai.util.queue import Queue
+from pacai.util.priorityQueue import PriorityQueue
 
 """
 In this file, you will implement generic search algorithms which are called by Pacman agents.
@@ -36,13 +37,12 @@ def depthFirstSearch(problem):
         if problem.isGoal(top[0]):
             return top[1]
         if top[0] in visited:
-            pass
+            continue
         visited = visited + [top[0]]
         for neighbors in problem.successorStates(top[0]):
             if neighbors[0] not in visited:
                 stack.push((neighbors[0], top[1] + [(neighbors[1])]))
     
-    #Base Case
     return ['South']
 
     raise NotImplementedError()
@@ -77,6 +77,27 @@ def uniformCostSearch(problem):
     """
 
     # *** Your Code Here ***
+    visited = []
+    pq = PriorityQueue()
+    best = None
+    pq.push((problem.startingState(),[],0),0)
+    while(not pq.isEmpty()):
+        front = pq.pop()
+        if problem.isGoal(front[0]):
+            if best is None:
+                best = front
+            else:
+                best = front if best[1] > front[2] else best
+        if front[0] in visited:
+            continue
+        visited += [front[0]]
+        for neighbors in problem.successorStates(front[0]):
+            path = front[1] + [neighbors[1]]
+            pq.push((neighbors[0], path, front[2] + problem.actionsCost(path)),front[2] + problem.actionsCost(path))
+
+
+    return best[1]
+
     raise NotImplementedError()
 
 def aStarSearch(problem, heuristic):
