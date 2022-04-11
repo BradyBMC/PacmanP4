@@ -6,7 +6,7 @@ from pacai.util.priorityQueue import PriorityQueue
 In this file, you will implement generic search algorithms which are called by Pacman agents.
 """
 
-def depthFirstSearch(problem):   
+def depthFirstSearch(problem):
     """
     Search the deepest nodes in the search tree first [p 85].
 
@@ -42,7 +42,6 @@ def depthFirstSearch(problem):
         for neighbors in problem.successorStates(top[0]):
             if neighbors[0] not in visited:
                 stack.push((neighbors[0], top[1] + [(neighbors[1])]))
-    
     return ['South']
 
     raise NotImplementedError()
@@ -62,13 +61,11 @@ def breadthFirstSearch(problem):
         if problem.isGoal(front[0]):
             return front[1]
         if front[0] in visited:
-           pass
+            continue
         visited += [front[0]]
         for neighbors in problem.successorStates(front[0]):
             if neighbors[0] not in visited:
                 queue.push((neighbors[0], front[1] + [neighbors[1]]))
-
-
     raise NotImplementedError()
 
 def uniformCostSearch(problem):
@@ -77,25 +74,32 @@ def uniformCostSearch(problem):
     """
 
     # *** Your Code Here ***
+    # visited = {}
     visited = []
     pq = PriorityQueue()
     best = None
-    pq.push((problem.startingState(),[],0),0)
+    pq.push((problem.startingState(), [], 0), 0)
     while(not pq.isEmpty()):
         front = pq.pop()
         if problem.isGoal(front[0]):
             if best is None:
                 best = front
             else:
-                best = front if best[1] > front[2] else best
-        if front[0] in visited:
+                best = front if best[2] > front[2] else best
+        # if(best is not None and front[2] > best[2]):
+        if front[0] in visited or (best is not None and front[2] > best[2]):
             continue
         visited += [front[0]]
+        if front[2] > best[2]:
+            continue
+        # visited[front[0]] = 1
         for neighbors in problem.successorStates(front[0]):
             path = front[1] + [neighbors[1]]
-            pq.push((neighbors[0], path, front[2] + problem.actionsCost(path)),front[2] + problem.actionsCost(path))
-
-
+            if best is not None:
+                if front[2] + problem.actionsCost(path) > best[2]:
+                    continue
+            pq.push((neighbors[0], path, front[2] + problem.actionsCost(path)),
+                    front[2] + problem.actionsCost(path))
     return best[1]
 
     raise NotImplementedError()
