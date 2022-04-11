@@ -103,5 +103,19 @@ def aStarSearch(problem, heuristic):
     """
 
     # *** Your Code Here ***
-    print(type(heuristic))
+    visited = []
+    pq = PriorityQueue()
+    pq.push((problem.startingState(), [], 0), 0)
+    while(not pq.isEmpty()):
+        front = pq.pop()
+        if problem.isGoal(front[0]):
+            return front[1]
+        if front[0] in visited:
+            continue
+        visited += [front[0]]
+        for neighbors in problem.successorStates(front[0]):
+            path = front[1] + [neighbors[1]]
+            cost = heuristic(front[0], problem)
+            pq.push((neighbors[0], path, cost), cost)
+
     raise NotImplementedError()
