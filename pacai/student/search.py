@@ -74,7 +74,6 @@ def uniformCostSearch(problem):
     """
 
     # *** Your Code Here ***
-    # visited = {}
     visited = []
     pq = PriorityQueue()
     best = None
@@ -86,20 +85,14 @@ def uniformCostSearch(problem):
                 best = front
             else:
                 best = front if best[2] > front[2] else best
-        # if(best is not None and front[2] > best[2]):
+            continue
         if front[0] in visited or (best is not None and front[2] > best[2]):
             continue
         visited += [front[0]]
-        if front[2] > best[2]:
-            continue
-        # visited[front[0]] = 1
         for neighbors in problem.successorStates(front[0]):
             path = front[1] + [neighbors[1]]
-            if best is not None:
-                if front[2] + problem.actionsCost(path) > best[2]:
-                    continue
-            pq.push((neighbors[0], path, front[2] + problem.actionsCost(path)),
-                    front[2] + problem.actionsCost(path))
+            cost = problem.actionsCost(path)
+            pq.push((neighbors[0], path, cost), cost)
     return best[1]
 
     raise NotImplementedError()
@@ -110,4 +103,5 @@ def aStarSearch(problem, heuristic):
     """
 
     # *** Your Code Here ***
+    print(type(heuristic))
     raise NotImplementedError()
