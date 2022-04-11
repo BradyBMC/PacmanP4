@@ -70,15 +70,18 @@ class CornersProblem(SearchProblem):
         # raise NotImplementedError()
     
     def startingState(self):
+        print(self.startingPosition)
         return self.startingPosition
 
     def isGoal(self, state):
         if state in self.corners:
             return True
+        self._visitedLocations.add(state)
+        coordinates = state
+        self._visitHistory.append(coordinates)
         return False
 
     def successorStates(self, state):
-        print("is workinig passed")
         successors = []
         for action in Directions.CARDINAL:
             x, y = state
@@ -89,8 +92,17 @@ class CornersProblem(SearchProblem):
             if (not hitsWall):
                 # Construct the successor.
                 nextState = (nextx, nexty)
-                successors.append((nextState, action))
+                successors.append((nextState, action, 1))
 
+        self._numExpanded += 1
+        if (state not in self._visitedLocations):
+            self._visitedLocations.add(state)
+            # Note: visit history requires coordinates not states. In this situation
+            # they are equivalent.
+            coordinates = state
+            self._visitHistory.append(coordinates)
+
+        print(successors)
         return successors
 
 
