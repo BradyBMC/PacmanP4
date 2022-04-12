@@ -66,6 +66,7 @@ def breadthFirstSearch(problem):
         for neighbors in problem.successorStates(front[0]):
             if neighbors[0] not in visited:
                 queue.push((neighbors[0], front[1] + [neighbors[1]]))
+    print("Passed and found no goal")
     raise NotImplementedError()
 
 def uniformCostSearch(problem):
