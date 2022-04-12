@@ -57,7 +57,7 @@ class CornersProblem(SearchProblem):
         super().__init__()
 
         self.walls = startingGameState.getWalls()
-        self.startingPosition = startingGameState.getPacmanPosition()
+        self.startingPosition = (startingGameState.getPacmanPosition(), [])
         top = self.walls.getHeight() - 2
         right = self.walls.getWidth() - 2
 
@@ -68,43 +68,46 @@ class CornersProblem(SearchProblem):
 
         # *** Your Code Here ***
         # raise NotImplementedError()
-    
+
     def startingState(self):
-        print(self.startingPosition)
         return self.startingPosition
 
     def isGoal(self, state):
-        if state in self.corners:
+        touched = True
+        for corners in self.corners:
+            if corners not in state[1]:
+                touched = False
+        if touched:
             return True
-        self._visitedLocations.add(state)
-        coordinates = state
+        self._visitedLocations.add(state[0])
+        coordinates = state[0]
         self._visitHistory.append(coordinates)
         return False
 
     def successorStates(self, state):
         successors = []
         for action in Directions.CARDINAL:
-            x, y = state
+            x, y = state[0]
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
             hitsWall = self.walls[nextx][nexty]
-
+            visited = state[1]
             if (not hitsWall):
                 # Construct the successor.
                 nextState = (nextx, nexty)
-                successors.append((nextState, action, 1))
+                if nextState in self.corners and nextState not in visited:
+                    visited += [nextState]
+                successors.append(((nextState, visited), action, 1))
 
         self._numExpanded += 1
-        if (state not in self._visitedLocations):
-            self._visitedLocations.add(state)
+        if (state[0] not in self._visitedLocations):
+            self._visitedLocations.add(state[0])
             # Note: visit history requires coordinates not states. In this situation
             # they are equivalent.
-            coordinates = state
+            coordinates = state[0]
             self._visitHistory.append(coordinates)
-
         print(successors)
         return successors
-
 
     def actionsCost(self, actions):
         """
@@ -116,7 +119,7 @@ class CornersProblem(SearchProblem):
         if (actions is None):
             return 999999
 
-        x, y = self.startingPosition
+        x, y = self.startingPosition[0]
         for action in actions:
             dx, dy = Actions.directionToVector(action)
             x, y = int(x + dx), int(y + dy)
