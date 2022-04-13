@@ -57,7 +57,7 @@ class CornersProblem(SearchProblem):
         super().__init__()
 
         self.walls = startingGameState.getWalls()
-        self.startingPosition = (startingGameState.getPacmanPosition(), [])
+        self.startingPosition = startingGameState.getPacmanPosition()
         top = self.walls.getHeight() - 2
         right = self.walls.getWidth() - 2
 
@@ -65,12 +65,13 @@ class CornersProblem(SearchProblem):
         for corner in self.corners:
             if not startingGameState.hasFood(*corner):
                 logging.warning('Warning: no food in corner ' + str(corner))
+        self.startState = (self.startingPosition, [])
 
         # *** Your Code Here ***
         # raise NotImplementedError()
 
     def startingState(self):
-        return self.startingPosition
+        return self.startState
 
     def isGoal(self, state):
         touched = True
@@ -79,6 +80,8 @@ class CornersProblem(SearchProblem):
                 touched = False
         if touched:
             return True
+        # if state[0] in self.corners and len(state[1]) == 4:
+        #     return True
         self._visitedLocations.add(state[0])
         coordinates = state[0]
         self._visitHistory.append(coordinates)
@@ -91,7 +94,7 @@ class CornersProblem(SearchProblem):
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
             hitsWall = self.walls[nextx][nexty]
-            visited = state[1]
+            visited = list(state[1])
             if (not hitsWall):
                 # Construct the successor.
                 nextState = (nextx, nexty)
@@ -106,7 +109,6 @@ class CornersProblem(SearchProblem):
             # they are equivalent.
             coordinates = state[0]
             self._visitHistory.append(coordinates)
-        print(successors)
         return successors
 
     def actionsCost(self, actions):
@@ -119,7 +121,7 @@ class CornersProblem(SearchProblem):
         if (actions is None):
             return 999999
 
-        x, y = self.startingPosition[0]
+        x, y = self.startingPosition
         for action in actions:
             dx, dy = Actions.directionToVector(action)
             x, y = int(x + dx), int(y + dy)
