@@ -90,9 +90,10 @@ def uniformCostSearch(problem):
             continue
         visited += [front[0]]
         for neighbors in problem.successorStates(front[0]):
-            path = front[1] + [neighbors[1]]
-            cost = problem.actionsCost(path)
-            pq.push((neighbors[0], path, cost), cost)
+            if neighbors not in visited:
+                path = front[1] + [neighbors[1]]
+                cost = problem.actionsCost(path)
+                pq.push((neighbors[0], path, cost), cost)
     return best[1]
 
     raise NotImplementedError()
@@ -114,8 +115,10 @@ def aStarSearch(problem, heuristic):
             continue
         visited += [front[0]]
         for neighbors in problem.successorStates(front[0]):
-            path = front[1] + [neighbors[1]]
-            cost = heuristic(front[0], problem)
-            pq.push((neighbors[0], path, cost), cost)
+            if neighbors not in visited:
+                path = front[1] + [neighbors[1]]
+                gn = front[2] + neighbors[2]
+                fn = gn + heuristic(neighbors[0], problem)
+                pq.push((neighbors[0], path, gn), fn)
 
     raise NotImplementedError()

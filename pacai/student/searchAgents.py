@@ -16,6 +16,7 @@ from pacai.agents.search.base import SearchAgent
 
 # Added library
 from pacai.core.directions import Directions
+from pacai.core import distance
 
 class CornersProblem(SearchProblem):
     """
@@ -80,8 +81,6 @@ class CornersProblem(SearchProblem):
                 touched = False
         if touched:
             return True
-        # if state[0] in self.corners and len(state[1]) == 4:
-        #     return True
         self._visitedLocations.add(state[0])
         coordinates = state[0]
         self._visitHistory.append(coordinates)
@@ -143,6 +142,25 @@ def cornersHeuristic(state, problem):
     # Useful information.
     # corners = problem.corners  # These are the corner coordinates
     # walls = problem.walls  # These are the walls of the maze, as a Grid.
+    walls = problem.walls
+    x, y = state[0]
+    closest = []
+    for corners in problem.corners:
+        if corners in state[1]:
+            continue
+        closest.append(distance.manhattan((x, y), corners))
+        dist = 0
+        for other_corner in problem.corners:
+            if len(state[1]) == 3:
+                dist = 0
+                break
+            if other_corner in state[1] or other_corner == corners:
+                continue
+            dist = max(distance.manhattan(corners, other_corner), dist)
+        closest[len(closest) - 1] += dist
+    if len(closest) == 0:
+        return 0
+    return min(closest)
 
     # *** Your Code Here ***
     return heuristic.null(state, problem)  # Default to trivial solution
