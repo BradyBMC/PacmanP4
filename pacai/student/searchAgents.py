@@ -8,7 +8,6 @@ Good luck and happy searching!
 import logging
 
 from pacai.core.actions import Actions
-from pacai.core.search import heuristic
 from pacai.core.search.position import PositionSearchProblem
 from pacai.core.search.problem import SearchProblem
 from pacai.agents.base import BaseAgent
@@ -17,6 +16,7 @@ from pacai.agents.search.base import SearchAgent
 # Added library
 from pacai.core.directions import Directions
 from pacai.core import distance
+from pacai.student.search import breadthFirstSearch
 
 class CornersProblem(SearchProblem):
     """
@@ -69,13 +69,13 @@ class CornersProblem(SearchProblem):
         self.startState = (self.startingPosition, [])
 
         # *** Your Code Here ***
-        # raise NotImplementedError()
 
     def startingState(self):
         return self.startState
 
     def isGoal(self, state):
         touched = True
+        # Runs through if all corner are in visited
         for corners in self.corners:
             if corners not in state[1]:
                 touched = False
@@ -94,10 +94,12 @@ class CornersProblem(SearchProblem):
             nextx, nexty = int(x + dx), int(y + dy)
             hitsWall = self.walls[nextx][nexty]
             visited = list(state[1])
+            # Create new list object
             if (not hitsWall):
                 # Construct the successor.
                 nextState = (nextx, nexty)
                 if nextState in self.corners and nextState not in visited:
+                    # Add to visited list of corners
                     visited += [nextState]
                 successors.append(((nextState, visited), action, 1))
 
@@ -142,15 +144,16 @@ def cornersHeuristic(state, problem):
     # Useful information.
     # corners = problem.corners  # These are the corner coordinates
     # walls = problem.walls  # These are the walls of the maze, as a Grid.
-    walls = problem.walls
     x, y = state[0]
     closest = []
     for corners in problem.corners:
+        # For each corner find the closest corner to current position
         if corners in state[1]:
             continue
         closest.append(distance.manhattan((x, y), corners))
         dist = 0
         for other_corner in problem.corners:
+            # For other corners, add the distance for the max
             if len(state[1]) == 3:
                 dist = 0
                 break
@@ -161,9 +164,6 @@ def cornersHeuristic(state, problem):
     if len(closest) == 0:
         return 0
     return min(closest)
-
-    # *** Your Code Here ***
-    return heuristic.null(state, problem)  # Default to trivial solution
 
 def foodHeuristic(state, problem):
     """
@@ -195,9 +195,14 @@ def foodHeuristic(state, problem):
     """
 
     position, foodGrid = state
-
-    # *** Your Code Here ***
-    return heuristic.null(state, problem)  # Default to the null heuristic.
+    foodList = foodGrid.asList()
+    dist = []
+    for food in foodList:
+        # Find furthest distance of food from position
+        dist.append(distance.maze(food, position, problem.startingGameState))
+    if len(dist) == 0:
+        return 0
+    return max(dist)
 
 class ClosestDotSearchAgent(SearchAgent):
     """
@@ -239,6 +244,8 @@ class ClosestDotSearchAgent(SearchAgent):
         # problem = AnyFoodSearchProblem(gameState)
 
         # *** Your Code Here ***
+        problem = AnyFoodSearchProblem(gameState)
+        return breadthFirstSearch(problem)
         raise NotImplementedError()
 
 class AnyFoodSearchProblem(PositionSearchProblem):
@@ -267,6 +274,15 @@ class AnyFoodSearchProblem(PositionSearchProblem):
 
         # Store the food for later reference.
         self.food = gameState.getFood()
+
+    def isGoal(self, state):
+        # Check in food 2darray if bool true
+        if self.food[state[0]][state[1]]:
+            return True
+        self._visitedLocations.add(state[0])
+        coordinates = state[0]
+        self._visitHistory.append(coordinates)
+        return False
 
 class ApproximateSearchAgent(BaseAgent):
     """

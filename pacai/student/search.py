@@ -30,20 +30,21 @@ def depthFirstSearch(problem):
     visited = []
 
     stack = Stack()
+    # Stack with current location and path to location
     stack.push((start, []))
 
     while (not stack.isEmpty()):
         top = stack.pop()
         if problem.isGoal(top[0]):
+            # return the path if at goal
             return top[1]
         if top[0] in visited:
             continue
         visited = visited + [top[0]]
         for neighbors in problem.successorStates(top[0]):
+            # Add new node being traveled to and add to visited
             if neighbors[0] not in visited:
                 stack.push((neighbors[0], top[1] + [(neighbors[1])]))
-    return ['South']
-
     raise NotImplementedError()
 
 def breadthFirstSearch(problem):
@@ -52,7 +53,6 @@ def breadthFirstSearch(problem):
     """
 
     # *** Your Code Here ***
-
     visited = []
     queue = Queue()
     queue.push((problem.startingState(), []))
@@ -64,6 +64,7 @@ def breadthFirstSearch(problem):
             continue
         visited += [front[0]]
         for neighbors in problem.successorStates(front[0]):
+            # Add new nodes being traveled and path to get there
             if neighbors[0] not in visited:
                 queue.push((neighbors[0], front[1] + [neighbors[1]]))
     raise NotImplementedError()
@@ -81,22 +82,23 @@ def uniformCostSearch(problem):
     while(not pq.isEmpty()):
         front = pq.pop()
         if problem.isGoal(front[0]):
+            # Save new best path only if its optimal
             if best is None:
                 best = front
             else:
                 best = front if best[2] > front[2] else best
             continue
+        # End new path being searched if its cost is already worse than optimal
         if front[0] in visited or (best is not None and front[2] > best[2]):
             continue
         visited += [front[0]]
         for neighbors in problem.successorStates(front[0]):
             if neighbors not in visited:
+                # Add new directions to path and cost
                 path = front[1] + [neighbors[1]]
                 cost = problem.actionsCost(path)
                 pq.push((neighbors[0], path, cost), cost)
     return best[1]
-
-    raise NotImplementedError()
 
 def aStarSearch(problem, heuristic):
     """
@@ -116,9 +118,10 @@ def aStarSearch(problem, heuristic):
         visited += [front[0]]
         for neighbors in problem.successorStates(front[0]):
             if neighbors not in visited:
+                # Add heuristic cost and current path cost
                 path = front[1] + [neighbors[1]]
                 gn = front[2] + neighbors[2]
                 fn = gn + heuristic(neighbors[0], problem)
+                # Pass current path cost, and determine base
                 pq.push((neighbors[0], path, gn), fn)
-
     raise NotImplementedError()
