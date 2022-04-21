@@ -2,6 +2,9 @@ import random
 
 from pacai.agents.base import BaseAgent
 from pacai.agents.search.multiagent import MultiAgentSearchAgent
+from pacai.core.distance import manhattan
+from pacai.core.distance import euclidean
+
 
 class ReflexAgent(BaseAgent):
     """
@@ -48,17 +51,26 @@ class ReflexAgent(BaseAgent):
         in your evaluation function.
         """
 
-        successorGameState = currentGameState.generatePacmanSuccessor(action)
-
         # Useful information you can extract.
         # newPosition = successorGameState.getPacmanPosition()
         # oldFood = currentGameState.getFood()
         # newGhostStates = successorGameState.getGhostStates()
         # newScaredTimes = [ghostState.getScaredTimer() for ghostState in newGhostStates]
 
-        # *** Your Code Here ***
-
-        return successorGameState.getScore()
+        successorGameState = currentGameState.generatePacmanSuccessor(action)
+        newPosition = successorGameState.getPacmanPosition()
+        newFood = successorGameState.getFood()
+        newGhostStates = successorGameState.getGhostStates()
+        ghostCord = []
+        for p in newGhostStates:
+            ghostCord.append(p.getPosition())
+        for xy in ghostCord:
+            if manhattan(xy, newPosition) == 3:
+                return -1
+        ezFood = []
+        for xy in newFood:
+            ezFood.append(euclidean(xy, newPosition))
+        return max(ezFood)
 
 class MinimaxAgent(MultiAgentSearchAgent):
     """
