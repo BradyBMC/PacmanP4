@@ -78,7 +78,7 @@ class ReflexAgent(BaseAgent):
             foodDist[-1] += largest
         if newFood != oldFood:
             return currentGameState.getScore() + max(foodDist)
-        return 1/min(foodDist) - abs(currentGameState.getScore())
+        return 1 / min(foodDist) - abs(currentGameState.getScore())
 
 class MinimaxAgent(MultiAgentSearchAgent):
     """
