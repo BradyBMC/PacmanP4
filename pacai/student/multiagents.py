@@ -70,11 +70,17 @@ class ReflexAgent(BaseAgent):
         oldFood = currentGameState.getFood()
         foodDist = []
         for food in newFood.asList():
-            foodDist.append(1/euclidean(newPosition, food))
-        if oldFood != newFood:
-            return successorGameState.getScore() + 1/min(food)
-        return 1/max(food) - abs(successorGameState.getScore())
-
+            foodDist.append(euclidean(newPosition, food))
+            largest = 0
+            for diff_food in newFood.asList():
+                if food == diff_food:
+                    continue
+                largest = max(euclidean(food, diff_food), largest)
+            foodDist[-1] += largest
+        if newFood != oldFood:
+            return currentGameState.getScore() + max(foodDist)
+        return 1/min(foodDist) - abs(currentGameState.getScore())
+        
 class MinimaxAgent(MultiAgentSearchAgent):
     """
     A minimax agent.
