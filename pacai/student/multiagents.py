@@ -62,14 +62,12 @@ class ReflexAgent(BaseAgent):
         newFood = successorGameState.getFood()
         newGhostStates = successorGameState.getGhostStates()
         for ghost in newGhostStates:
-            if ghost.isBraveGhost():
-                if manhattan(newPosition, ghost.getPosition()) < 2:
-                    return -999999
+            if ghost.isBraveGhost() and manhattan(newPosition, ghost.getPosition()) < 2:
+                return -999999
         foodList = []
         for food in newFood.asList():
             foodList.append(euclidean(food, newPosition))
         return successorGameState.getScore()
-
             
 class MinimaxAgent(MultiAgentSearchAgent):
     """
