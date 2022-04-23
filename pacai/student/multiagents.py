@@ -4,6 +4,7 @@ from pacai.agents.base import BaseAgent
 from pacai.agents.search.multiagent import MultiAgentSearchAgent
 from pacai.core.distance import manhattan
 from pacai.core.distance import euclidean
+from pacai.core.distance import maze
 
 
 class ReflexAgent(BaseAgent):
@@ -64,11 +65,16 @@ class ReflexAgent(BaseAgent):
         for ghost in newGhostStates:
             if ghost.isBraveGhost() and manhattan(newPosition, ghost.getPosition()) < 2:
                 return -999999
-        foodList = []
+        if newFood.count() == 0:
+            return 999999
+        oldFood = currentGameState.getFood()
+        foodDist = []
         for food in newFood.asList():
-            foodList.append(euclidean(food, newPosition))
-        return successorGameState.getScore()
-            
+            foodDist.append(1/euclidean(newPosition, food))
+        if oldFood != newFood:
+            return successorGameState.getScore() + 1/min(food)
+        return 1/max(food) - abs(successorGameState.getScore())
+
 class MinimaxAgent(MultiAgentSearchAgent):
     """
     A minimax agent.
