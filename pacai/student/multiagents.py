@@ -121,7 +121,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         low = -999999
         move = None
         if depth == self.getTreeDepth():
-            return self.getEvaluationFunction() (state), move
+            return self.getEvaluationFunction()(state), move
         for a in actions:
             utility, a2 = self.min_value(state.generateSuccessor(0, a), depth + 1)
             if utility > low:
@@ -137,7 +137,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         high = 999999
         move = None
         if depth == self.getTreeDepth():
-            return self.getEvaluationFunction() (state), move
+            return self.getEvaluationFunction()(state), move
         for a in actions:
             utility, a2 = self.max_value(state.generateSuccessor(0, a), depth + 1)
             if utility < high:
@@ -146,7 +146,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
             return self.getEvaluationFunction()(state), move
         return high, move
 
-    
     def getAction(self, state):
         # agent_count = state.getNumAgents()
         # actions = state.getLegalActions()
