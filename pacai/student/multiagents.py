@@ -1,10 +1,10 @@
 import random
+from tkinter import W
 
 from pacai.agents.base import BaseAgent
 from pacai.agents.search.multiagent import MultiAgentSearchAgent
 from pacai.core.distance import manhattan
 from pacai.core.distance import euclidean
-
 
 class ReflexAgent(BaseAgent):
     """
@@ -109,6 +109,54 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
     def __init__(self, index, **kwargs):
         super().__init__(index, **kwargs)
+
+    def minimax_search(self, state):
+        value, move = self.max_value(state)
+        print("first")
+        return move
+
+    def max_value(self, state):
+        actions = state.getLegalActions()
+        if "Stop" in actions:
+            actions.remove("Stop")
+        low = -999999
+        move = None
+        for a in actions:
+            utility, a2 = self.min_value(state.generateSuccessor(0, a))
+            if utility > low:
+                low, move = utility, a
+        if actions == []:
+            return self.getEvaluationFunction()(state), move
+        return low, move
+
+    def min_value(self, state):
+        actions = state.getLegalActions()
+        if "Stop" in actions:
+            actions.remove("Stop")
+        high = 999999
+        move = None
+        for a in actions:
+            utility, a2 = self.max_value(state.generateSuccessor(0, a))
+            if utility < high:
+                high, move = utility, a
+        if actions == []:
+            return self.getEvaluationFunction()(state), move
+        return high, move
+
+    
+    def getAction(self, state):
+        # agent_count = state.getNumAgents()
+        # actions = state.getLegalActions()
+        # for x in range(3):
+        #     print(actions)
+        #     state = state.generateSuccessor(0, actions[0])
+        #     actions = state.getLegalActions()
+        # print(agent_count, " actions: ", actions)
+        # print(self.getTreeDepth())
+        # func = self.getEvaluationFunction()
+        # print("Line 116 ", func(state))
+        # return "West"
+        return self.minimax_search(state)
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
