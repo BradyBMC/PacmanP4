@@ -1,5 +1,5 @@
 import random
-from tkinter import W
+# from tkinter import W
 
 from pacai.agents.base import BaseAgent
 from pacai.agents.search.multiagent import MultiAgentSearchAgent
@@ -123,7 +123,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         if depth == self.getTreeDepth():
             return self.getEvaluationFunction()(state), move
         for a in actions:
-            utility, a2 = self.min_value(state.generateSuccessor(0, a), depth + 1)
+            utility, a2 = self.min_value(state.generateSuccessor(0, a), depth)
             if utility > low:
                 low, move = utility, a
         if actions == []:
@@ -136,8 +136,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
             actions.remove("Stop")
         high = 999999
         move = None
-        if depth == self.getTreeDepth():
-            return self.getEvaluationFunction()(state), move
         for a in actions:
             utility, a2 = self.max_value(state.generateSuccessor(0, a), depth + 1)
             if utility < high:
