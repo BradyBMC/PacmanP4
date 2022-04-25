@@ -111,32 +111,35 @@ class MinimaxAgent(MultiAgentSearchAgent):
         super().__init__(index, **kwargs)
 
     def minimax_search(self, state):
-        value, move = self.max_value(state)
-        print("first")
+        value, move = self.max_value(state, 0)
         return move
 
-    def max_value(self, state):
+    def max_value(self, state, depth):
         actions = state.getLegalActions()
         if "Stop" in actions:
             actions.remove("Stop")
         low = -999999
         move = None
+        if depth == self.getTreeDepth():
+            return self.getEvaluationFunction() (state), move
         for a in actions:
-            utility, a2 = self.min_value(state.generateSuccessor(0, a))
+            utility, a2 = self.min_value(state.generateSuccessor(0, a), depth + 1)
             if utility > low:
                 low, move = utility, a
         if actions == []:
             return self.getEvaluationFunction()(state), move
         return low, move
 
-    def min_value(self, state):
+    def min_value(self, state, depth):
         actions = state.getLegalActions()
         if "Stop" in actions:
             actions.remove("Stop")
         high = 999999
         move = None
+        if depth == self.getTreeDepth():
+            return self.getEvaluationFunction() (state), move
         for a in actions:
-            utility, a2 = self.max_value(state.generateSuccessor(0, a))
+            utility, a2 = self.max_value(state.generateSuccessor(0, a), depth + 1)
             if utility < high:
                 high, move = utility, a
         if actions == []:
