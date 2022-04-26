@@ -111,51 +111,46 @@ class MinimaxAgent(MultiAgentSearchAgent):
         super().__init__(index, **kwargs)
 
     def minimax_search(self, state):
-        value, move = self.max_value(state, 0)
+        # Psuedo code from textbook
+        value, move = self.max_value(state, 0, 0)
         return move
 
-    def max_value(self, state, depth):
+    def max_value(self, state, index, depth):
         actions = state.getLegalActions()
         if "Stop" in actions:
             actions.remove("Stop")
+        # Arbitrary large number, neg infinity
         low = -999999
         move = None
         if depth == self.getTreeDepth():
             return self.getEvaluationFunction()(state), move
         for a in actions:
-            utility, a2 = self.min_value(state.generateSuccessor(0, a), depth)
+            utility, a2 = self.min_value(state.generateSuccessor(0, a),index + 1, depth)
             if utility > low:
                 low, move = utility, a
         if actions == []:
             return self.getEvaluationFunction()(state), move
         return low, move
 
-    def min_value(self, state, depth):
-        actions = state.getLegalActions()
-        if "Stop" in actions:
-            actions.remove("Stop")
+    def min_value(self, state, index, depth):
+        # Positive infinity
         high = 999999
         move = None
-        for a in actions:
-            utility, a2 = self.max_value(state.generateSuccessor(0, a), depth + 1)
-            if utility < high:
-                high, move = utility, a
+        actions = state.getLegalActions(index)
         if actions == []:
             return self.getEvaluationFunction()(state), move
+        for a in actions:
+            if index == state.getNumAgents() - 1:
+                # Min completed, Pacman takes max
+                utility, a2 = self.max_value(state.generateSuccessor(index, a), 0, depth + 1)
+            else:
+                # Generate next pacman successor, order doesn't matter
+                utility, a2 = self.min_value(state.generateSuccessor(index, a), index + 1, depth)
+            if utility < high:
+                high, move = utility, a
         return high, move
 
     def getAction(self, state):
-        # agent_count = state.getNumAgents()
-        # actions = state.getLegalActions()
-        # for x in range(3):
-        #     print(actions)
-        #     state = state.generateSuccessor(0, actions[0])
-        #     actions = state.getLegalActions()
-        # print(agent_count, " actions: ", actions)
-        # print(self.getTreeDepth())
-        # func = self.getEvaluationFunction()
-        # print("Line 116 ", func(state))
-        # return "West"
         return self.minimax_search(state)
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
