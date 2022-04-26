@@ -125,7 +125,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         if depth == self.getTreeDepth():
             return self.getEvaluationFunction()(state), move
         for a in actions:
-            utility, a2 = self.min_value(state.generateSuccessor(0, a),index + 1, depth)
+            utility, a2 = self.min_value(state.generateSuccessor(0, a), index + 1, depth)
             if utility > low:
                 low, move = utility, a
         if actions == []:
