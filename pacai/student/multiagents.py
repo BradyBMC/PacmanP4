@@ -171,7 +171,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     def alpha_beta_search(self, state):
         value, move = self.max_value(state, 0, 0, -999999, 999999)
         return move
-    
+   
     def max_value(self, state, index, depth, alpha, beta):
         actions = state.getLegalActions()
         if "Stop" in actions:
@@ -182,7 +182,8 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         if depth == self.getTreeDepth():
             return self.getEvaluationFunction()(state), move
         for a in actions:
-            utility, a2 = self.min_value(state.generateSuccessor(0, a), index + 1, depth, alpha, beta)
+            utility, a2 = self.min_value(state.generateSuccessor(0, a),
+            index + 1, depth, alpha, beta)
             # if utility > low:
             #     low, move = utility, a
             if utility > low:
@@ -238,6 +239,49 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 
     def __init__(self, index, **kwargs):
         super().__init__(index, **kwargs)
+
+    def minimax_search(self, state):
+        # Psuedo code from textbook
+        value, move = self.max_value(state, 0, 0)
+        return move
+
+    def max_value(self, state, index, depth):
+        actions = state.getLegalActions()
+        if "Stop" in actions:
+            actions.remove("Stop")
+        # Arbitrary large number, neg infinity
+        low = -999999
+        move = None
+        if depth == self.getTreeDepth():
+            return self.getEvaluationFunction()(state), move
+        for a in actions:
+            utility, a2 = self.min_value(state.generateSuccessor(0, a), index + 1, depth)
+            if utility > low:
+                low, move = utility, a
+        if actions == []:
+            return self.getEvaluationFunction()(state), move
+        return low, move
+
+    def min_value(self, state, index, depth):
+        # Positive infinity
+        high = 999999
+        move = None
+        actions = state.getLegalActions(index)
+        if actions == []:
+            return self.getEvaluationFunction()(state), move
+        for a in actions:
+            if index == state.getNumAgents() - 1:
+                # Min completed, Pacman takes max
+                utility, a2 = self.max_value(state.generateSuccessor(index, a), 0, depth + 1)
+            else:
+                # Generate next pacman successor, order doesn't matter
+                utility, a2 = self.min_value(state.generateSuccessor(index, a), index + 1, depth)
+            if utility < high:
+                high, move = utility, a
+        return high, move
+
+    def getAction(self, state):
+        return self.minimax_search(state)
 
 def betterEvaluationFunction(currentGameState):
     """
