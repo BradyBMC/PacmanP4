@@ -168,6 +168,60 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     def __init__(self, index, **kwargs):
         super().__init__(index, **kwargs)
 
+    def alpha_beta_search(self, state):
+        value, move = self.max_value(state, 0, 0, -999999, 999999)
+        return move
+    
+    def max_value(self, state, index, depth, alpha, beta):
+        actions = state.getLegalActions()
+        if "Stop" in actions:
+            actions.remove("Stop")
+        # Arbitrary large number, neg infinity
+        low = -999999
+        move = None
+        if depth == self.getTreeDepth():
+            return self.getEvaluationFunction()(state), move
+        for a in actions:
+            utility, a2 = self.min_value(state.generateSuccessor(0, a), index + 1, depth, alpha, beta)
+            # if utility > low:
+            #     low, move = utility, a
+            if utility > low:
+                low, move = utility, a
+                alpha = max(alpha, low)
+            if low >= beta:
+                return low, move
+        if actions == []:
+            return self.getEvaluationFunction()(state), move
+        return low, move
+
+    def min_value(self, state, index, depth, alpha, beta):
+        # Positive infinity
+        high = 999999
+        move = None
+        actions = state.getLegalActions(index)
+        if actions == []:
+            return self.getEvaluationFunction()(state), move
+        for a in actions:
+            if index == state.getNumAgents() - 1:
+                # Min completed, Pacman takes max
+                utility, a2 = self.max_value(state.generateSuccessor(index, a),
+                0, depth + 1, alpha, beta)
+            else:
+                # Generate next pacman successor, order doesn't matter
+                utility, a2 = self.min_value(state.generateSuccessor(index, a),
+                index + 1, depth, alpha, beta)
+            # if utility < high:
+            #     high, move = utility, a
+            if utility < high:
+                high, move = utility, a
+                beta = min(beta, high)
+            if high <= alpha:
+                return high, move
+        return high, move
+
+    def getAction(self, state):
+        return self.alpha_beta_search(state)
+
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
     An expectimax agent.
