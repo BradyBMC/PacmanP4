@@ -1,5 +1,4 @@
 import random
-# from tkinter import W
 
 from pacai.agents.base import BaseAgent
 from pacai.agents.search.multiagent import MultiAgentSearchAgent
@@ -62,12 +61,14 @@ class ReflexAgent(BaseAgent):
         newFood = successorGameState.getFood()
         newGhostStates = successorGameState.getGhostStates()
         for ghost in newGhostStates:
+            # Checks if ghost is dangerous and near pacman
             if ghost.isBraveGhost() and manhattan(newPosition, ghost.getPosition()) < 2:
                 return -999999
         if newFood.count() == 0:
             return 999999
         oldFood = currentGameState.getFood()
         foodDist = []
+        # Checks distance of food and how far it is from other food
         for food in newFood.asList():
             foodDist.append(euclidean(newPosition, food))
             largest = 0
@@ -76,6 +77,7 @@ class ReflexAgent(BaseAgent):
                     continue
                 largest = max(euclidean(food, diff_food), largest)
             foodDist[-1] += largest
+        # Reward successfully eating food
         if newFood != oldFood:
             return currentGameState.getScore() + max(foodDist)
         return 1 / min(foodDist) - abs(currentGameState.getScore())
@@ -123,12 +125,15 @@ class MinimaxAgent(MultiAgentSearchAgent):
         low = -999999
         move = None
         if depth == self.getTreeDepth():
+            # Max depth hit
             return self.getEvaluationFunction()(state), move
         for a in actions:
+            # Generate moves for all ghosts
             utility, a2 = self.min_value(state.generateSuccessor(0, a), index + 1, depth)
             if utility > low:
                 low, move = utility, a
         if actions == []:
+            # Returns if no actions available
             return self.getEvaluationFunction()(state), move
         return low, move
 
@@ -141,10 +146,10 @@ class MinimaxAgent(MultiAgentSearchAgent):
             return self.getEvaluationFunction()(state), move
         for a in actions:
             if index == state.getNumAgents() - 1:
-                # Min completed, Pacman takes max
+                # Min completed for all ghosts, Pacman takes max
                 utility, a2 = self.max_value(state.generateSuccessor(index, a), 0, depth + 1)
             else:
-                # Generate next pacman successor, order doesn't matter
+                # Generate next ghost successor, order doesn't matter
                 utility, a2 = self.min_value(state.generateSuccessor(index, a), index + 1, depth)
             if utility < high:
                 high, move = utility, a
@@ -169,6 +174,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         super().__init__(index, **kwargs)
 
     def alpha_beta_search(self, state):
+        # Psuedo code from textbook
         value, move = self.max_value(state, 0, 0, -999999, 999999)
         return move
 
@@ -184,8 +190,6 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         for a in actions:
             utility, a2 = self.min_value(state.generateSuccessor(0, a),
             index + 1, depth, alpha, beta)
-            # if utility > low:
-            #     low, move = utility, a
             if utility > low:
                 low, move = utility, a
                 alpha = max(alpha, low)
@@ -208,11 +212,10 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                 utility, a2 = self.max_value(state.generateSuccessor(index, a),
                 0, depth + 1, alpha, beta)
             else:
-                # Generate next pacman successor, order doesn't matter
+                # Generate next ghost successor, order doesn't matter
                 utility, a2 = self.min_value(state.generateSuccessor(index, a),
                 index + 1, depth, alpha, beta)
-            # if utility < high:
-            #     high, move = utility, a
+            # Logic to check if further searching needed
             if utility < high:
                 high, move = utility, a
                 beta = min(beta, high)
@@ -269,12 +272,13 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         actions = state.getLegalActions(index)
         if actions == []:
             return self.getEvaluationFunction()(state), move
+        # Randomly selects an action from list of possible ghost actions
         a = actions[random.randint(0, len(actions) - 1)]
         if index == state.getNumAgents() - 1:
-            # Min completed, Pacman takes max
+            # Min completed, Pacman takes max of all mins
             utility, a2 = self.max_value(state.generateSuccessor(index, a), 0, depth + 1)
         else:
-            # Generate next pacman successor, order doesn't matter
+            # Generate next ghost successor, order doesn't matter
             utility, a2 = self.min_value(state.generateSuccessor(index, a), index + 1, depth)
         if utility < high:
             high, move = utility, a
@@ -295,15 +299,17 @@ def betterEvaluationFunction(currentGameState):
     ghostDist = 0
     for ghost in currentGameState.getGhostStates():
         dist = manhattan(newPosition, ghost.getPosition())
+        # Return negative if Pacman dangerously near ghost
         if dist == 0:
             return -999
         ghostDist += dist
     foodDist = 0
     if newFood.count() == 0:
         return 999
+    # Sum up food distance
     for food in newFood.asList():
         foodDist += manhattan(food, newPosition)
-    # sub = 0 if ghostDist == 0 else (1 / ghostDist) * currentGameState.getNumGhosts()
+    # Multiplying 1/ghostdist by ghostcount didn't work for some reason
     sub = 0 if ghostDist == 0 else 1 / ghostDist
     add = 0 if foodDist == 0 else (1 / foodDist) * newFood.count()
     return currentGameState.getScore() - sub + add
