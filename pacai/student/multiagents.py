@@ -296,13 +296,16 @@ def betterEvaluationFunction(currentGameState):
     for ghost in currentGameState.getGhostStates():
         ghostDist += manhattan(newPosition, ghost.getPosition())
     foodDist = 0
+    if newFood.count() == 0:
+        return 999999
     for food in newFood.asList():
-        largest = 0
-        for diff_food in newFood.asList():
-            if food == diff_food:
-                continue
-            largest = max(manhattan(food, diff_food), largest)
-        foodDist += largest
+        # largest = 0
+        # for diff_food in newFood.asList():
+        #     if food == diff_food:
+        #         continue
+        #     largest = max(manhattan(food, diff_food), largest)
+        # foodDist += largest
+        foodDist += manhattan(food, newPosition)
     sub = 0 if ghostDist == 0 else 1 / ghostDist
     add = 0 if foodDist == 0 else 1 / foodDist
     return currentGameState.getScore() - sub + add
