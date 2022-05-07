@@ -1,3 +1,4 @@
+from tkinter import W
 from pacai.agents.learning.value import ValueEstimationAgent
 
 class ValueIterationAgent(ValueEstimationAgent):
@@ -39,7 +40,23 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.values = {}  # A dictionary which holds the q-values for each state.
 
         # Compute the values here.
-        raise NotImplementedError()
+        # raise NotImplementedError()
+        for state in mdp.getStates():
+            self.values[state] = self.valueIteration(state, 0)
+
+    def valueIteration(self, state, depth):
+        if self.mdp.isTerminal(state) or depth == self.iters:
+            return self.mdp.getReward(state, -1, -1)
+
+        best = -999999
+        for action in self.mdp.getPossibleActions(state):
+            total = 0
+            for trans_prob in self.mdp.getTransitionStatesAndProbs(state, action):
+                total += trans_prob[1] * (self.mdp.getReward(state, -1, -1) + self.discountRate * self.valueIteration(trans_prob[0], depth + 1))
+            best = max(best, total)
+        if best == -999999:
+            print("arr")
+        return best
 
     def getValue(self, state):
         """
@@ -54,3 +71,10 @@ class ValueIterationAgent(ValueEstimationAgent):
         """
 
         return self.getPolicy(state)
+    
+    def getQValue(self, state, action):
+        print(action)
+        return None
+
+    def getPolicy(self, state):
+        return None
