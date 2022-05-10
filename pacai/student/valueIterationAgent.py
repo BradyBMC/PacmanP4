@@ -44,8 +44,6 @@ class ValueIterationAgent(ValueEstimationAgent):
             copy = self.values.copy()
             for state in states:
                 copy[state] = self.valueIteration(state)
-                if state in self.values:
-                    copy[state] = max(self.values[state], copy[state])
             self.values = copy
 
     def valueIteration(self, state):
@@ -77,7 +75,8 @@ class ValueIterationAgent(ValueEstimationAgent):
     def getQValue(self, state, action):
         sum = 0
         for sprime, prob in self.mdp.getTransitionStatesAndProbs(state, action):
-            sum += prob * (self.mdp.getReward(state, action, sprime) + self.discountRate * self.values[sprime])
+            sum += prob * (self.mdp.getReward(state, action, sprime)
+            + self.discountRate * self.values[sprime])
         return sum
 
     def getPolicy(self, state):
@@ -86,7 +85,8 @@ class ValueIterationAgent(ValueEstimationAgent):
         for actions in self.mdp.getPossibleActions(state):
             sum = 0
             for sprime, prob in self.mdp.getTransitionStatesAndProbs(state, actions):
-                sum += prob * (self.mdp.getReward(state, actions, sprime) + self.discountRate * self.values[sprime])
+                sum += prob * (self.mdp.getReward(state, actions, sprime)
+                + self.discountRate * self.values[sprime])
             if best < sum:
                 best = sum
                 best_action = actions
