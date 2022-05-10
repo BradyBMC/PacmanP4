@@ -1,4 +1,4 @@
-from tkinter import W
+# from tkinter import W
 from pacai.agents.learning.value import ValueEstimationAgent
 
 class ValueIterationAgent(ValueEstimationAgent):
@@ -39,10 +39,6 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.iters = iters
         self.values = {}  # A dictionary which holds the q-values for each state.
 
-        # Compute the values here.
-        # raise NotImplementedError()
-        # for state in mdp.getStates():
-        #     self.values[state] = self.valueIteration(state, 0)
         states = mdp.getStates()
         for i in range(iters):
             copy = self.values.copy()
@@ -60,23 +56,9 @@ class ValueIterationAgent(ValueEstimationAgent):
                 vk = 0
                 if state in self.values:
                     vk = self.values[sprime]
-                print(self.mdp.getReward(sprime, actions, state))
                 vnew += prob * (self.mdp.getReward(state, actions, sprime) + self.discountRate * vk)
             vbest = max(vbest, vnew)
-        return vbest
-
-
-    # def valueIteration(self, state, depth):
-    #     if self.mdp.isTerminal(state) or depth == self.iters:
-    #         return self.mdp.getReward(state, -1, -1)
-
-    #     best = 0
-    #     for action in self.mdp.getPossibleActions(state):
-    #         total = 0
-    #         for trans_prob in self.mdp.getTransitionStatesAndProbs(state, action):
-    #             total += trans_prob[1] * (self.mdp.getReward(state, -1, -1) + self.discountRate * self.valueIteration(trans_prob[0], depth + 1))
-    #         best = max(best, total)
-    #     return best
+        return 0 if vbest == -999999 else vbest
 
     def getValue(self, state):
         """
@@ -91,10 +73,21 @@ class ValueIterationAgent(ValueEstimationAgent):
         """
 
         return self.getPolicy(state)
-    
+
     def getQValue(self, state, action):
-        print(action)
-        return None
+        sum = 0
+        for sprime, prob in self.mdp.getTransitionStatesAndProbs(state, action):
+            sum += prob * (self.mdp.getReward(state, action, sprime) + self.discountRate * self.values[sprime])
+        return sum
 
     def getPolicy(self, state):
-        return None
+        best_action = None
+        best = -999999
+        for actions in self.mdp.getPossibleActions(state):
+            sum = 0
+            for sprime, prob in self.mdp.getTransitionStatesAndProbs(state, actions):
+                sum += prob * (self.mdp.getReward(state, actions, sprime) + self.discountRate * self.values[sprime])
+            if best < sum:
+                best = sum
+                best_action = actions
+        return best_action
