@@ -41,22 +41,42 @@ class ValueIterationAgent(ValueEstimationAgent):
 
         # Compute the values here.
         # raise NotImplementedError()
-        for state in mdp.getStates():
-            self.values[state] = self.valueIteration(state, 0)
+        # for state in mdp.getStates():
+        #     self.values[state] = self.valueIteration(state, 0)
+        states = mdp.getStates()
+        for i in range(iters):
+            copy = self.values.copy()
+            for state in states:
+                copy[state] = self.valueIteration(state)
+                if state in self.values:
+                    copy[state] = max(self.values[state], copy[state])
+            self.values = copy
 
-    def valueIteration(self, state, depth):
-        if self.mdp.isTerminal(state) or depth == self.iters:
-            return self.mdp.getReward(state, -1, -1)
+    def valueIteration(self, state):
+        vbest = -999999
+        for actions in self.mdp.getPossibleActions(state):
+            vnew = 0
+            for sprime, prob in self.mdp.getTransitionStatesAndProbs(state, actions):
+                vk = 0
+                if state in self.values:
+                    vk = self.values[sprime]
+                print(self.mdp.getReward(sprime, actions, state))
+                vnew += prob * (self.mdp.getReward(state, actions, sprime) + self.discountRate * vk)
+            vbest = max(vbest, vnew)
+        return vbest
 
-        best = -999999
-        for action in self.mdp.getPossibleActions(state):
-            total = 0
-            for trans_prob in self.mdp.getTransitionStatesAndProbs(state, action):
-                total += trans_prob[1] * (self.mdp.getReward(state, -1, -1) + self.discountRate * self.valueIteration(trans_prob[0], depth + 1))
-            best = max(best, total)
-        if best == -999999:
-            print("arr")
-        return best
+
+    # def valueIteration(self, state, depth):
+    #     if self.mdp.isTerminal(state) or depth == self.iters:
+    #         return self.mdp.getReward(state, -1, -1)
+
+    #     best = 0
+    #     for action in self.mdp.getPossibleActions(state):
+    #         total = 0
+    #         for trans_prob in self.mdp.getTransitionStatesAndProbs(state, action):
+    #             total += trans_prob[1] * (self.mdp.getReward(state, -1, -1) + self.discountRate * self.valueIteration(trans_prob[0], depth + 1))
+    #         best = max(best, total)
+    #     return best
 
     def getValue(self, state):
         """
