@@ -24,6 +24,8 @@ def question2():
 def question3a():
     """
     [Enter a description of what you did here.]
+    With noise at zero, will always take the
+    shortest route bc no risk
     """
 
     answerDiscount = 0.2
@@ -35,6 +37,8 @@ def question3a():
 def question3b():
     """
     [Enter a description of what you did here.]
+    Reduced the reward enough to the point the
+    closer exit was worth more
     """
 
     answerDiscount = 0.2
@@ -46,6 +50,8 @@ def question3b():
 def question3c():
     """
     [Enter a description of what you did here.]
+    Chaned noise to zero, so there is no
+    risk to take the shortest path
     """
 
     answerDiscount = 0.9
