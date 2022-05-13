@@ -83,10 +83,7 @@ class ValueIterationAgent(ValueEstimationAgent):
         best_action = None
         best = -999999
         for actions in self.mdp.getPossibleActions(state):
-            sum = 0
-            for sprime, prob in self.mdp.getTransitionStatesAndProbs(state, actions):
-                sum += prob * (self.mdp.getReward(state, actions, sprime)
-                + self.discountRate * self.values[sprime])
+            sum = self.getQValue(state, actions)
             if best < sum:
                 best = sum
                 best_action = actions

@@ -1,5 +1,8 @@
+from operator import itemgetter
 from pacai.agents.learning.reinforcement import ReinforcementAgent
 from pacai.util import reflection
+from pacai.util import probability
+import random
 
 class QLearningAgent(ReinforcementAgent):
     """
@@ -46,6 +49,7 @@ class QLearningAgent(ReinforcementAgent):
         super().__init__(index, **kwargs)
 
         # You can initialize Q-values here.
+        self.values = {}
 
     def getQValue(self, state, action):
         """
@@ -53,8 +57,8 @@ class QLearningAgent(ReinforcementAgent):
         and `pacai.core.directions.Directions`.
         Should return 0.0 if the (state, action) pair has never been seen.
         """
-
-        return 0.0
+        pair = (state, action)
+        return 0.0 if pair not in self.values else self.values[pair]
 
     def getValue(self, state):
         """
@@ -68,8 +72,10 @@ class QLearningAgent(ReinforcementAgent):
         which returns the actual best action.
         Whereas this method returns the value of the best action.
         """
-
-        return 0.0
+        value_list = []
+        for action in self.getLegalActions(state):
+            value_list.append(self.getQValue(state, action))
+        return 0.0 if value_list == [] else max(value_list)
 
     def getPolicy(self, state):
         """
@@ -83,8 +89,30 @@ class QLearningAgent(ReinforcementAgent):
         which returns the value of the best action.
         Whereas this method returns the best action itself.
         """
+        pair = []
+        for action in self.getLegalActions(state):
+            pair.append((action, self.getQValue(state, action)))
+        return None if pair == [] else max(pair, key = itemgetter(1))[0]
 
-        return None
+    def getAction(self, state):
+        epsilon = self.getEpsilon()
+        actions = self.getLegalActions(state)
+        take = None
+        if(probability.flipCoin(epsilon)):
+            # Random choice
+            take = random.choice(actions)
+        else:
+            take = self.getPolicy(state)
+        return take
+
+    def update(self, state, action, nextState, reward):
+        qstar = self.getValue(nextState)
+        sample = reward + self.getDiscountRate() * qstar
+        alpha = self.getAlpha()
+        # self.values[(state, action)] = (1 - alpha) * self.getQValue(state, action)
+        # + alpha * sample
+        qvalue = (1 - alpha) * self.getQValue(state, action) + alpha * sample
+        self.values[(state, action)] = qvalue
 
 class PacmanQAgent(QLearningAgent):
     """

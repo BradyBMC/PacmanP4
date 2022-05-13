@@ -85,12 +85,12 @@ def question3e():
 def question6():
     """
     [Enter a description of what you did here.]
+    I tried epsilon at 0 and minimizing the learning rate
+    but there will never be enough utiltiy to traverse
+    across the bridge
     """
 
-    answerEpsilon = 0.3
-    answerLearningRate = 0.5
-
-    return answerEpsilon, answerLearningRate
+    return NOT_POSSIBLE
 
 if __name__ == '__main__':
     questions = [
