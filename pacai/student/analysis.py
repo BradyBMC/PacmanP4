@@ -90,10 +90,9 @@ def question6():
     I tried epsilon at 0 and minimizing the learning rate
     but there will never be enough utiltiy to traverse
     across the bridge. The only time it will try to travers
-    is if it randomly makes it across which won't happen 
+    is if it randomly makes it across which won't happen
     enough times in 50 iterations to be consistent.
     """
-
     return NOT_POSSIBLE
 
 if __name__ == '__main__':
