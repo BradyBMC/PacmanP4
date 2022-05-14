@@ -1,4 +1,5 @@
 from operator import itemgetter
+from socket import getfqdn
 from pacai.agents.learning.reinforcement import ReinforcementAgent
 from pacai.util import reflection
 from pacai.util import probability
@@ -164,6 +165,23 @@ class ApproximateQAgent(PacmanQAgent):
         self.featExtractor = reflection.qualifiedImport(extractor)
 
         # You might want to initialize weights here.
+        self.weights = {}
+
+    def getQValue(self, state, action):
+        features = self.featExtractor.getFeatures(self, state, action)
+        sum = 0
+        for feature in features:
+            sum += self.weights[feature]
+        
+    def update(self, state, action, nextState, reward):
+        discount = self.getDiscountRate()
+        qvalue = self.getValue(nextState)
+        correction = (reward + discount * qvalue) - self.getQValue(state, action)
+        features = self.featExtractor.getFeatures(self, state, action)
+        alpha = self.getAlpha()
+        for feature in features:
+            self.weights[feature] = alpha * correction
+        pass
 
     def final(self, state):
         """
@@ -177,4 +195,4 @@ class ApproximateQAgent(PacmanQAgent):
         if self.episodesSoFar == self.numTraining:
             # You might want to print your weights here for debugging.
             # *** Your Code Here ***
-            raise NotImplementedError()
+            print(self.weights)
