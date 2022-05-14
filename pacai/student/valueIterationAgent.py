@@ -40,7 +40,9 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.values = {}  # A dictionary which holds the q-values for each state.
 
         states = mdp.getStates()
+        # runs value iteration on all states
         for i in range(iters):
+            # creates updatable copy
             copy = self.values.copy()
             for state in states:
                 copy[state] = self.valueIteration(state)
@@ -51,9 +53,11 @@ class ValueIterationAgent(ValueEstimationAgent):
         for actions in self.mdp.getPossibleActions(state):
             vnew = 0
             for sprime, prob in self.mdp.getTransitionStatesAndProbs(state, actions):
+                # Set vk to zero incase terminal state
                 vk = 0
                 if state in self.values:
                     vk = self.values[sprime]
+                # apply qvalue
                 vnew += prob * (self.mdp.getReward(state, actions, sprime) + self.discountRate * vk)
             vbest = max(vbest, vnew)
         return 0 if vbest == -999999 else vbest
@@ -82,6 +86,8 @@ class ValueIterationAgent(ValueEstimationAgent):
     def getPolicy(self, state):
         best_action = None
         best = -999999
+        # Searches through all actions and updates if a
+        # better action is found
         for actions in self.mdp.getPossibleActions(state):
             sum = self.getQValue(state, actions)
             if best < sum:

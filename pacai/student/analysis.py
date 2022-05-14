@@ -63,6 +63,7 @@ def question3c():
 def question3d():
     """
     [Enter a description of what you did here.]
+    Didn't change anything
     """
 
     answerDiscount = 0.9
@@ -74,6 +75,7 @@ def question3d():
 def question3e():
     """
     [Enter a description of what you did here.]
+    Didn't change anything
     """
 
     answerDiscount = 0.9
@@ -87,7 +89,9 @@ def question6():
     [Enter a description of what you did here.]
     I tried epsilon at 0 and minimizing the learning rate
     but there will never be enough utiltiy to traverse
-    across the bridge
+    across the bridge. The only time it will try to travers
+    is if it randomly makes it across which won't happen 
+    enough times in 50 iterations to be consistent.
     """
 
     return NOT_POSSIBLE
