@@ -92,6 +92,7 @@ class QLearningAgent(ReinforcementAgent):
         pair = []
         for action in self.getLegalActions(state):
             pair.append((action, self.getQValue(state, action)))
+        # Returns none if there were no legal actions else we get the max sorting by the 2nd index
         return None if pair == [] else max(pair, key = itemgetter(1))[0]
 
     def getAction(self, state):
@@ -109,8 +110,6 @@ class QLearningAgent(ReinforcementAgent):
         qstar = self.getValue(nextState)
         sample = reward + self.getDiscountRate() * qstar
         alpha = self.getAlpha()
-        # self.values[(state, action)] = (1 - alpha) * self.getQValue(state, action)
-        # + alpha * sample
         qvalue = (1 - alpha) * self.getQValue(state, action) + alpha * sample
         self.values[(state, action)] = qvalue
 
@@ -156,6 +155,12 @@ class ApproximateQAgent(PacmanQAgent):
     Should update your weights based on transition.
 
     DESCRIPTION: <Write something here so we know what you did.>
+
+    Overwrote functions inherited for getQValue and update
+    In getQValue it takes the summation for all feature and add
+    the existing weight * features
+    In Update, we calculate a new sample and add it
+    to the existing dictionary of weights
     """
 
     def __init__(self, index,
