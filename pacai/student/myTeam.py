@@ -2,11 +2,11 @@ import random
 from pacai.util import util
 from pacai.util import reflection
 from pacai.agents.capture.capture import CaptureAgent
+from pacai.core import distanceCalculator
 
 class MasterAgent(CaptureAgent):
-    def __init__(self, index, isRed, **kwargs):
+    def __init__(self, index, **kwargs):
         super().__init__(index, **kwargs)
-        self.red = isRed
 
     def registerInitialState(self, gameState):
         """
@@ -19,6 +19,12 @@ class MasterAgent(CaptureAgent):
         super().registerInitialState(gameState)
 
         # Your initialization code goes here, if you need any.
+    
+    def getEnemyPoition(self, successor):
+        "Return list of enemy position in [(x, y)]"
+        enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
+        position = [a for a in enemies if a.isPacman() and a.getPosition is not None]
+        return position
 
     def getSuccessor(self, gameState, action):
         successor = gameState.generateSuccessor(self.index, action)
@@ -31,12 +37,9 @@ class MasterAgent(CaptureAgent):
 
     def chooseAction(self, gameState):
         actions = gameState.getLegalActions(self.index)
-
         values = [self.evaluate(gameState, a) for a in actions]
-
         maxValue = max(values)
         bestActions = [a for a, v in zip(actions, values) if v == maxValue]
-
         return random.choice(bestActions)
 
     def evaluate(self, gameState, action):
@@ -47,7 +50,6 @@ class MasterAgent(CaptureAgent):
         features = self.getFeatures(gameState, action)
         weights = self.getWeights(gameState, action)
         stateEval = sum(features[feature] * weights[feature] for feature in features)
-
         return stateEval
 
     def getFeatures(self, gameState, action):
@@ -87,6 +89,6 @@ def createTeam(firstIndex, secondIndex, isRed,
     """
 
     return [
-        MasterAgent(firstIndex, isRed),
-        MasterAgent(secondIndex, isRed)
+        MasterAgent(firstIndex),
+        MasterAgent(secondIndex)
     ]
