@@ -53,8 +53,8 @@ class MasterAgent(CaptureAgent):
         safe = self.getMazeDistance(myPos, ePos) - self.getMazeDistance(myPos, fPos) * 2
         return safe > 0
 
-    def getAlly(self):
-        for index in self.getTeam():
+    def getAlly(self, gameState):
+        for index in self.getTeam(gameState):
             if self.index == index:
                 return index
 
@@ -119,10 +119,11 @@ class atkAgent(MasterAgent):
         enemyPos = [a.getPosition() for a in enemies if a.isGhost() and a.getPosition() is not None]
         if (len(enemyPos) > 0):
             minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
-        # ally = successor.getAgentState(self.getAlly())
-        # allyPos = successor.getAgentState(ally).getPosition()
-        # allyDist = self.getMazeDistance(myPos, allyPos)
-        # features['allyDist'] = 1/allyDist
+        ally = self.getAlly(successor)
+        allyPos = successor.getAgentState(ally).getPosition()
+        allyDist = self.getMazeDistance(myPos, allyPos)
+        allyDist = 1 if allyDist == 0 else allyDist
+        features['allyDist'] = 1/allyDist
         return features
 
     def getWeights(self, gameState, action):
@@ -132,7 +133,7 @@ class atkAgent(MasterAgent):
         """
         return {
             'enemyDist': -100,
-            'allyDist': -1000,
+            'allyDist': -10,
             'successorScore': 1.0,
             'distanceToFood': -1
         }
