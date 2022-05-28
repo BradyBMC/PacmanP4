@@ -19,12 +19,6 @@ class MasterAgent(CaptureAgent):
         super().registerInitialState(gameState)
 
         # Your initialization code goes here, if you need any.
-    
-    def getEnemyPoition(self, successor):
-        "Return list of enemy position in [(x, y)]"
-        enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
-        position = [a for a in enemies if a.isPacman() and a.getPosition is not None]
-        return position
 
     def getSuccessor(self, gameState, action):
         successor = gameState.generateSuccessor(self.index, action)
@@ -33,7 +27,7 @@ class MasterAgent(CaptureAgent):
             # Only half a grid position was covered.
             return successor.generateSuccessor(self.index, action)
         else:
-            return successor
+            return successor   
 
     def chooseAction(self, gameState):
         actions = gameState.getLegalActions(self.index)
@@ -46,11 +40,23 @@ class MasterAgent(CaptureAgent):
         """
         Computes a linear combination of features and feature weights.
         """
-
         features = self.getFeatures(gameState, action)
         weights = self.getWeights(gameState, action)
         stateEval = sum(features[feature] * weights[feature] for feature in features)
         return stateEval
+
+    def isSafe(self, myPos, ePos, fPos):
+        """
+        Takes in current position, nearest enemy position and nearest food position
+        Returns a bool if the enemy is further than the nearest food
+        """
+        safe = self.getMazeDistance(myPos, ePos) - self.getMazeDistance(myPos, fPos) * 2
+        return safe > 0
+
+    def getAlly(self):
+        for index in self.getTeam():
+            if self.index == index:
+                return index
 
     def getFeatures(self, gameState, action):
         """
@@ -60,11 +66,16 @@ class MasterAgent(CaptureAgent):
         features = {}
         successor = self.getSuccessor(gameState, action)
         features['successorScore'] = self.getScore(successor)
+        myPos = successor.getAgentState(self.index).getPosition()
         foodList = self.getFood(gameState).asList()
         if (len(foodList) > 0):
-            myPos = successor.getAgentState(self.index).getPosition()
             minDistance = min([self.getMazeDistance(myPos, food) for food in foodList])
             features['distanceToFood'] = minDistance
+        enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
+        enemyPos = [a.getPosition() for a in enemies if a.isPacman() and a.getPosition() is not None]
+        # enemyPos = self.getEnemyPosition(successor)
+        if (len(enemyPos) > 0):
+            minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
         return features
 
     def getWeights(self, gameState, action):
@@ -72,8 +83,56 @@ class MasterAgent(CaptureAgent):
         Returns a dict of weights for the state.
         The keys match up with the return from `ReflexCaptureAgent.getFeatures`.
         """
-
         return {
+            'numInvaders': -1000,
+            'onDefense': 100,
+            'successorScore': 1.0,
+            'distanceToFood': -1
+        }
+
+class atkAgent(MasterAgent):
+    def __init__(self, index, **kwargs):
+        super().__init__(index, **kwargs)
+
+    def evaluate(self, gameState, action):
+        """
+        Computes a linear combination of features and feature weights.
+        """
+        features = self.atkFeatures(gameState, action)
+        weights = self.getWeights(gameState, action)
+        stateEval = sum(features[feature] * weights[feature] for feature in features)
+        return stateEval
+
+    def atkFeatures(self, gameState, action):
+        """
+        Ooga booga, goes forwards and gets food
+        """
+        features = {}
+        successor = self.getSuccessor(gameState, action)
+        features['successorScore'] = self.getScore(successor)
+        myPos = successor.getAgentState(self.index).getPosition()
+        foodList = self.getFood(gameState).asList()
+        if (len(foodList) > 0):
+            minDistance = min([self.getMazeDistance(myPos, food) for food in foodList])
+            features['distanceToFood'] = minDistance
+        enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
+        enemyPos = [a.getPosition() for a in enemies if a.isGhost() and a.getPosition() is not None]
+        if (len(enemyPos) > 0):
+            minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
+        # ally = successor.getAgentState(self.getAlly())
+        # allyPos = successor.getAgentState(ally).getPosition()
+        # allyDist = self.getMazeDistance(myPos, allyPos)
+        # features['allyDist'] = 1/allyDist
+        return features
+
+    def getWeights(self, gameState, action):
+        """
+        Returns a dict of weights for the state.
+        The keys match up with the return from `ReflexCaptureAgent.getFeatures`.
+        """
+        return {
+            'enemyDist': -100,
+            'allyDist': -1000,
             'successorScore': 1.0,
             'distanceToFood': -1
         }
@@ -89,6 +148,6 @@ def createTeam(firstIndex, secondIndex, isRed,
     """
 
     return [
-        MasterAgent(firstIndex),
+        atkAgent(firstIndex),
         MasterAgent(secondIndex)
     ]
