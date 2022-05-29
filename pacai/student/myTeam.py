@@ -109,8 +109,8 @@ class MasterAgent(CaptureAgent):
             minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
             features['enemyDist'] = 1.0 / minenemy
         else:
-            minenemy = 0.0
-            features['enemyDist'] = minenemy
+            minenemy = 0
+            features['enemyDist'] = 0.0
 
         closestFood = 999999
         foodCnt = self.getFood(gameState).count()
@@ -136,12 +136,12 @@ class MasterAgent(CaptureAgent):
         The keys match up with the return from `ReflexCaptureAgent.getFeatures`.
         """
         return {
-            'deadend': -999999999.0,
+            'deadend': -999999.0,
             'eat': 100.0,
             'enemyDist': -1000.0,
             'allyDist': -10000.0,
             'successorScore': 1.0,
-            'distanceToFood': 50.0
+            'distanceToFood': -1.0
         }
 
     def defFeatures(self, gameState, action):
@@ -151,11 +151,27 @@ class MasterAgent(CaptureAgent):
         foodList = self.getFood(gameState).asList()
         cornerDist = self.getMazeDistance(self.CornerFood(foodList), myPos)
         features['cornerFood'] = 1/(1 if cornerDist == 0 else cornerDist)
+
+
+        # attack invaders
+        enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
+        enemyPos = [a.getPosition() for a in enemies if a.isGhost() and a.getPosition() is not None]
+        if gameState.getAgentState(self.index).isGhost() and gameState.getAgentState(self.index).isBraveGhost():
+            if (len(enemyPos) > 0):
+                minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
+                features['invaderDist'] = 1.0 / minenemy
+            else:
+                minenemy = 0
+                features['invaderDist'] = 0.0
+        else:
+            features['invaderDist'] = 0.0
+
         return features
 
     def getdefWeights(self, gameState, action):
         return {
-            'cornerFood': 900.0
+            'cornerFood': 900.0,
+            'invaderDist': 1000.0,
         }
 
 class topAgent(MasterAgent):
