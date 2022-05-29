@@ -68,10 +68,6 @@ class MasterAgent(CaptureAgent):
             if self.index == index:
                 return index
 
-    def farFood(self, myPos, foodList):
-        foodDist = [self.getMazeDistance(myPos, food) for food in foodList]
-        return max(foodDist)
-
     def atkFeatures(self, gameState, action):
         """
         Gets the closest food in enemy territory
