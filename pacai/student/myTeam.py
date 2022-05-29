@@ -3,7 +3,8 @@ from pacai.util import util
 from pacai.util import reflection
 from pacai.agents.capture.capture import CaptureAgent
 from pacai.core import distanceCalculator
-from pacai.core.distance import manhattan
+from pacai.util import priorityQueue
+from pacai.util.priorityQueue import PriorityQueue
 
 class MasterAgent(CaptureAgent):
     def __init__(self, index, **kwargs):
@@ -66,7 +67,6 @@ class MasterAgent(CaptureAgent):
         for index in self.getTeam(gameState):
             if self.index == index:
                 return index
-
     def atkFeatures(self, gameState, action):
         """
         Ooga booga, goes forwards and gets food
@@ -98,8 +98,8 @@ class MasterAgent(CaptureAgent):
         allyDist = .5 if allyDist == 0 else allyDist
         features['allyDist'] = 1/allyDist
 
-        cornerDist = self.getMazeDistance(self.CornerFood(foodList), myPos)
-        features['cornerFood'] = 1/(1 if cornerDist == 0 else cornerDist)
+        # cornerDist = self.getMazeDistance(self.CornerFood(foodList), myPos)
+        # features['cornerFood'] = 1/(1 if cornerDist == 0 else cornerDist)
 
         # dist to enemy feature
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
@@ -109,13 +109,16 @@ class MasterAgent(CaptureAgent):
         if len(enemyPos) > 0:
             for enemy in enemies:
                 if enemy.isGhost() and enemy.getPosition() is not None:
-                    if enemy.isBraveGhost():
-                        minenemy = -999999
+                    minenemy = self.getMazeDistance(myPos, enemy.getPosition())
+                    if enemy.isBraveGhost() and minenemy <= 3:
+                        minenemy = 999999
                         enemyPositions.append(-999999)
                     else:
-                        minenemy = self.getMazeDistance(myPos, enemy.getPosition())
                         enemyPositions.append(minenemy)
-            features['enemyDist'] = 1.0 / min(enemyPositions) if len(enemyPositions) != 0 else 0.0
+            if min(enemyPositions) == -999999:
+                features['enemyDist'] = 1.0/999999
+            else:
+                features['enemyDist'] =1.0 /  min(enemyPositions) if len(enemyPositions) != 0 else 0.0
         else:
             features['enemyDist'] = 0.0
 
@@ -145,18 +148,26 @@ class MasterAgent(CaptureAgent):
         return {
             'deadend': -999999.0,
             'eat': 100,
-            'cornerFood': 900.0,
+            # 'cornerFood': 900.0,
             'enemyDist': -100.0,
             'allyDist': -10000.0,
             'successorScore': 1.0,
-            'distanceToFood': -1000.0
+            'distanceToFood': 50.0
         }
 
-    def defFeatures(self, gamestate, action):
-        return {}
+    def defFeatures(self, gameState, action):
+        features = {}
+        successor = self.getSuccessor(gameState, action)
+        myPos = successor.getAgentState(self.index).getPosition()
+        foodList = self.getFood(gameState).asList()
+        cornerDist = self.getMazeDistance(self.CornerFood(foodList), myPos)
+        features['cornerFood'] = 1/(1 if cornerDist == 0 else cornerDist)
+        return features
 
     def getdefWeights(self, gameState, action):
-        return {}
+        return {
+            'cornerFood': 900.0
+        }
 
 class topAgent(MasterAgent):
     def __init__(self, index, **kwargs):
