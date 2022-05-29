@@ -174,6 +174,7 @@ class MasterAgent(CaptureAgent):
 
         # attack invaders
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
+        features['numInv'] = len(enemies)
         enemyPos = [a.getPosition() for a in enemies if a.isGhost() and a.getPosition() is not None]
         if gameState.getAgentState(self.index).isGhost() and gameState.getAgentState(self.index).isBraveGhost():
             if (len(enemyPos) > 0):
@@ -193,7 +194,8 @@ class MasterAgent(CaptureAgent):
     def getdefWeights(self, gameState, action):
         return {
             'cornerFood': 100.0,
-            'invaderDist': 1000.0,
+            'invaderDist': -99999.0,
+            'numInv': -100.0,
         }
 
 class topAgent(MasterAgent):
