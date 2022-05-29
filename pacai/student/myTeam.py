@@ -84,17 +84,14 @@ class MasterAgent(CaptureAgent):
         foodList = self.getFood(gameState).asList()
         newfoodList = self.getFood(successor).asList()
 
-        if len(foodList) < len(newfoodList):
-            features['eat'] = 1
-        else:
-            features['eat'] = 0
-
+        # Pacman gathers the distance to all food
         if (len(foodList) > 0):
             minDistance = min([self.getMazeDistance(myPos, food) for food in foodList])
             features['distanceToFood'] = minDistance
             if self.getFood(successor).asList() != foodList:
                 features['distanceToFood'] *= -1
 
+        # Pacman avoids being near ally
         ally = self.getAlly(successor)
         allyPos = successor.getAgentState(ally).getPosition()
         allyDist = self.getMazeDistance(myPos, allyPos)
@@ -115,6 +112,7 @@ class MasterAgent(CaptureAgent):
         foodCnt = self.getFood(gameState).count()
         futFoodCnt = successor.getFood().count()
 
+        # Avoid dead ends
         if minenemy < 5:
             if len(successor.getLegalActions(self.index)) == 2:
                 features['deadend'] = -1
@@ -145,6 +143,8 @@ class MasterAgent(CaptureAgent):
             features['capsule'] = 0
             features['atecapsule'] = 1
 
+        # If pacman powered up and ghost nearby, kill ghost
+
         return features
     def getatkWeights(self, gameState, action):
         """
@@ -152,11 +152,10 @@ class MasterAgent(CaptureAgent):
         The keys match up with the return from `ReflexCaptureAgent.getFeatures`.
         """
         return {
-            'capsule': 10.0,
+            'capsule': 30.0,
             'atecapsule': 60000.0,
             'deadend': -999999.0,
             'stop': -99999999.0,
-            'eat': 100.0,
             'enemyDist': -1000.0,
             'allyDist': -10000.0,
             'successorScore': 1.0,
@@ -170,7 +169,6 @@ class MasterAgent(CaptureAgent):
         foodList = self.getFood(gameState).asList()
         cornerDist = self.getMazeDistance(self.CornerFood(foodList), myPos)
         features['cornerFood'] = 1/(1 if cornerDist == 0 else cornerDist)
-
 
         # attack invaders
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
