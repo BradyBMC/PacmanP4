@@ -67,17 +67,22 @@ class MasterAgent(CaptureAgent):
         for index in self.getTeam(gameState):
             if self.index == index:
                 return index
+
+    def farFood(self, myPos, foodList):
+        foodDist = [self.getMazeDistance(myPos, food) for food in foodList]
+        return max(foodDist)
+
     def atkFeatures(self, gameState, action):
         """
-        Ooga booga, goes forwards and gets food
+        Gets the closest food in enemy territory
         """
         features = {}
         successor = self.getSuccessor(gameState, action)
         features['successorScore'] = self.getScore(successor)
         myPos = successor.getAgentState(self.index).getPosition()
         foodList = self.getFood(gameState).asList()
-
         newfoodList = self.getFood(successor).asList()
+
         if len(foodList) < len(newfoodList):
             features['eat'] = 1
         else:
@@ -88,7 +93,6 @@ class MasterAgent(CaptureAgent):
             features['distanceToFood'] = minDistance
             if self.getFood(successor).asList() != foodList:
                 features['distanceToFood'] *= -1
-
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
         enemyPos = [a.getPosition() for a in enemies if a.isGhost() and a.getPosition() is not None]
 
@@ -98,42 +102,30 @@ class MasterAgent(CaptureAgent):
         allyDist = .5 if allyDist == 0 else allyDist
         features['allyDist'] = 1/allyDist
 
-        # cornerDist = self.getMazeDistance(self.CornerFood(foodList), myPos)
-        # features['cornerFood'] = 1/(1 if cornerDist == 0 else cornerDist)
-
         # dist to enemy feature
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
-        enemyPos = [a.getPosition() for a in enemies if a.isGhost() and a.getPosition() is not None]
-        enemyPositions = []
-        
-        if len(enemyPos) > 0:
-            for enemy in enemies:
-                if enemy.isGhost() and enemy.getPosition() is not None:
-                    if enemy.isBraveGhost():
-                        minenemy = -999999
-                        enemyPositions.append(-999999)
-                    else:
-                        minenemy = self.getMazeDistance(myPos, enemy.getPosition())
-                        enemyPositions.append(minenemy)
-                else:
-                    minenemy = 999999
-            features['enemyDist'] = 1.0 / min(enemyPositions) if len(enemyPositions) != 0 else 0.0
+        enemyPos = [a.getPosition() for a in enemies if a.isGhost() and a.getPosition() is not None and a.isBraveGhost() is True]
+        if (len(enemyPos) > 0):
+            minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
+            features['enemyDist'] = 1.0 / minenemy
         else:
-            features['enemyDist'] = 0.0
+            minenemy = 0.0
+            features['enemyDist'] = minenemy
 
         closestFood = 999999
         foodCnt = self.getFood(gameState).count()
         futFoodCnt = successor.getFood().count()
 
-        if minenemy < 3:
+        if minenemy < 5:
             if len(gameState.getLegalActions(self.index)) == 2:
-                features['deadend'] = -1
+                features['deadend'] = -3
             else:
                 features['deadend'] = 0
 
-        if minenemy >= 3:
+        # distance to enemy ghost
+        if minenemy >= 5:
             if foodCnt == futFoodCnt:
-                closestFood = minDistance
+                closestFood = features['distanceToFood']
             closestFood = 1.0 / closestFood if closestFood != 0 else 0.0  # reciprocal
             features['enemyDist'] = closestFood
         return features
@@ -144,9 +136,8 @@ class MasterAgent(CaptureAgent):
         The keys match up with the return from `ReflexCaptureAgent.getFeatures`.
         """
         return {
-            'deadend': -999999.0,
-            'eat': 100,
-            # 'cornerFood': 900.0,
+            'deadend': -999999999.0,
+            'eat': 100.0,
             'enemyDist': -1000.0,
             'allyDist': -10000.0,
             'successorScore': 1.0,
