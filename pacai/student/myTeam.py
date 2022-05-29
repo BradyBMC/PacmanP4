@@ -2,7 +2,7 @@ import random
 from pacai.util import util
 from pacai.util import reflection
 from pacai.agents.capture.capture import CaptureAgent
-from pacai.core import distanceCalculator
+from pacai.core import distanceCalculator, gamestate
 from pacai.util import priorityQueue
 from pacai.util.priorityQueue import PriorityQueue
 
@@ -80,6 +80,7 @@ class MasterAgent(CaptureAgent):
         successor = self.getSuccessor(gameState, action)
         features['successorScore'] = self.getScore(successor)
         myPos = successor.getAgentState(self.index).getPosition()
+        oldPos = gameState.getAgentState(self.index).getPosition()
         foodList = self.getFood(gameState).asList()
         newfoodList = self.getFood(successor).asList()
 
@@ -93,8 +94,6 @@ class MasterAgent(CaptureAgent):
             features['distanceToFood'] = minDistance
             if self.getFood(successor).asList() != foodList:
                 features['distanceToFood'] *= -1
-        enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
-        enemyPos = [a.getPosition() for a in enemies if a.isGhost() and a.getPosition() is not None]
 
         ally = self.getAlly(successor)
         allyPos = successor.getAgentState(ally).getPosition()
@@ -104,13 +103,13 @@ class MasterAgent(CaptureAgent):
 
         # dist to enemy feature
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
-        enemyPos = [a.getPosition() for a in enemies if a.isGhost() and a.getPosition() is not None and a.isBraveGhost() is True]
+        enemyPos = [a.getPosition() for a in enemies if (a.isGhost() and a.getPosition() is not None and a.isBraveGhost() is True)]
         if (len(enemyPos) > 0):
             minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
             features['enemyDist'] = 1.0 / minenemy
         else:
-            minenemy = 0
-            features['enemyDist'] = 0.0
+            minenemy = 99999999999999999.0
+            features['enemyDist'] = minenemy
 
         closestFood = 999999
         foodCnt = self.getFood(gameState).count()
@@ -123,20 +122,40 @@ class MasterAgent(CaptureAgent):
                 features['deadend'] = 0
 
         # distance to enemy ghost
-        if minenemy >= 3:
+        if minenemy >= 4:
             if foodCnt == futFoodCnt:
                 closestFood = features['distanceToFood']
             closestFood = 1.0 / closestFood if closestFood != 0 else 0.0  # reciprocal
             features['enemyDist'] = closestFood
-        return features
 
+        # Pacman doesn't stop in enemy territory
+        if oldPos == myPos:
+            features['stop'] = 1
+        else:
+            features['stop'] = 0
+
+        # Pacman distance to powerup pellet
+        oldcapsule = gameState.getCapsules()
+        capsule = successor.getCapsules()
+        for cap in capsule:
+            capsuleDist = self.getMazeDistance(myPos, cap)
+            features['capsule'] = 1/(1 if capsuleDist == 0 else capsuleDist)
+
+        if oldcapsule > capsule:
+            features['capsule'] = 0
+            features['atecapsule'] = 1
+
+        return features
     def getatkWeights(self, gameState, action):
         """
         Returns a dict of weights for the state.
         The keys match up with the return from `ReflexCaptureAgent.getFeatures`.
         """
         return {
+            'capsule': 10.0,
+            'atecapsule': 60000.0,
             'deadend': -999999.0,
+            'stop': -99999999.0,
             'eat': 100.0,
             'enemyDist': -1000.0,
             'allyDist': -10000.0,
