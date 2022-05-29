@@ -44,8 +44,13 @@ class MasterAgent(CaptureAgent):
         """
         Computes a linear combination of features and feature weights.
         """
-        features = self.getFeatures(gameState, action)
-        weights = self.getWeights(gameState, action)
+        ghost = gameState.getAgentState(self.index).isGhost()
+        if ghost:
+            features = self.defFeatures(gameState, action)
+            weights = self.getdefWeights(gameState, action)
+        else:
+            features = self.atkFeatures(gameState, action)
+            weights = self.getatkWeights(gameState, action)
         stateEval = sum(features[feature] * weights[feature] for feature in features)
         return stateEval
 
@@ -62,31 +67,6 @@ class MasterAgent(CaptureAgent):
             if self.index == index:
                 return index
 
-    def getFeatures(self, gameState, action):
-        """
-        Returns a dict of features for the state.
-        The keys match up with the return from `ReflexCaptureAgent.getWeights`.
-        """
-        features = {}
-        successor = self.getSuccessor(gameState, action)
-
-        # successor score feature
-        features['successorScore'] = self.getScore(successor)
-        myPos = successor.getAgentState(self.index).getPosition()
-
-        # distance to food feature
-        foodList = self.getFood(gameState).asList()
-        if (len(foodList) > 0):
-            minDistance = min([self.getMazeDistance(myPos, food) for food in foodList])
-            features['distanceToFood'] = minDistance
-        enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
-        enemyPos = [a.getPosition() for a in enemies if a.isPacman() and a.getPosition() is not None]
-        # enemyPos = self.getEnemyPosition(successor)
-        if (len(enemyPos) > 0):
-            minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
-
-        return features
-
     def atkFeatures(self, gameState, action):
         """
         Ooga booga, goes forwards and gets food
@@ -96,15 +76,19 @@ class MasterAgent(CaptureAgent):
         features['successorScore'] = self.getScore(successor)
         myPos = successor.getAgentState(self.index).getPosition()
         foodList = self.getFood(gameState).asList()
-        foodCnt = self.getFood(gameState).count()
-        futFoodCnt = successor.getFood().count()
+
+        newfoodList = self.getFood(successor).asList()
+        if len(foodList) < len(newfoodList):
+            features['eat'] = 1
+        else:
+            features['eat'] = 0
+
         if (len(foodList) > 0):
-            minDistance = max([self.getMazeDistance(myPos, food) for food in foodList])
-            if foodCnt == futFoodCnt:
-                features['distanceToFood'] = minDistance
-            else:
-                features['distanceToFood'] = 999999
-        # features['distanceToFood'] = len(foodList)
+            minDistance = min([self.getMazeDistance(myPos, food) for food in foodList])
+            features['distanceToFood'] = minDistance
+            if self.getFood(successor).asList() != foodList:
+                features['distanceToFood'] *= -1
+
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
         enemyPos = [a.getPosition() for a in enemies if a.isGhost() and a.getPosition() is not None]
 
@@ -113,12 +97,9 @@ class MasterAgent(CaptureAgent):
         allyDist = self.getMazeDistance(myPos, allyPos)
         allyDist = .5 if allyDist == 0 else allyDist
         features['allyDist'] = 1/allyDist
-        #if(successor.getAgentState(self.index).isGhost()):
+
         cornerDist = self.getMazeDistance(self.CornerFood(foodList), myPos)
         features['cornerFood'] = 1/(1 if cornerDist == 0 else cornerDist)
-        # else:
-        #    features['topRightFood'] = 0
-
 
         # dist to enemy feature
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
@@ -143,41 +124,44 @@ class MasterAgent(CaptureAgent):
         closestFood = 999999
         foodCnt = self.getFood(gameState).count()
         futFoodCnt = successor.getFood().count()
-        if minenemy >= 2:
+
+        if minenemy < 3:
+            if len(gameState.getLegalActions(self.index)) == 2:
+                features['deadend'] = -1
+            else:
+                features['deadend'] = 0
+
+        if minenemy >= 3:
             if foodCnt == futFoodCnt:
                 closestFood = minDistance
             closestFood = 1.0 / closestFood if closestFood != 0 else 0.0  # reciprocal
             features['enemyDist'] = closestFood
         return features
 
-    def getWeights(self, gameState, action):
+    def getatkWeights(self, gameState, action):
         """
         Returns a dict of weights for the state.
         The keys match up with the return from `ReflexCaptureAgent.getFeatures`.
         """
         return {
-            'cornerFood': 1000,
-            'enemyDist': 10000,
-            'allyDist': -999999,
- 
-            'numInvaders': -1000,
-            'onDefense': 100,
+            'deadend': -999999.0,
+            'eat': 100,
+            'cornerFood': 900.0,
+            'enemyDist': -1000.0,
+            'allyDist': -10000.0,
             'successorScore': 1.0,
-            'distanceToFood': -10
+            'distanceToFood': -1.0
         }
+
+    def defFeatures(self, gamestate, action):
+        return {}
+
+    def getdefWeights(self, gameState, action):
+        return {}
 
 class topAgent(MasterAgent):
     def __init__(self, index, **kwargs):
         super().__init__(index, **kwargs)
-
-    def evaluate(self, gameState, action):
-        """
-        Computes a linear combination of features and feature weights.
-        """
-        features = self.atkFeatures(gameState, action)
-        weights = self.getWeights(gameState, action)
-        stateEval = sum(features[feature] * weights[feature] for feature in features)
-        return stateEval
 
     def CornerFood(self, foodList):
         """
@@ -192,15 +176,6 @@ class topAgent(MasterAgent):
 class botAgent(MasterAgent):
     def __init__(self, index, **kwargs):
         super().__init__(index, **kwargs)
-
-    def evaluate(self, gameState, action):
-        """
-        Computes a linear combination of features and feature weights.
-        """
-        features = self.atkFeatures(gameState, action)
-        weights = self.getWeights(gameState, action)
-        stateEval = sum(features[feature] * weights[feature] for feature in features)
-        return stateEval
 
     def CornerFood(self, foodList):
         """
