@@ -115,8 +115,6 @@ class MasterAgent(CaptureAgent):
                     else:
                         minenemy = self.getMazeDistance(myPos, enemy.getPosition())
                         enemyPositions.append(minenemy)
-                else:
-                    minenemy = 999999
             features['enemyDist'] = 1.0 / min(enemyPositions) if len(enemyPositions) != 0 else 0.0
         else:
             features['enemyDist'] = 0.0
@@ -131,6 +129,7 @@ class MasterAgent(CaptureAgent):
             else:
                 features['deadend'] = 0
 
+        return features
         if minenemy >= 3:
             if foodCnt == futFoodCnt:
                 closestFood = minDistance
@@ -147,10 +146,10 @@ class MasterAgent(CaptureAgent):
             'deadend': -999999.0,
             'eat': 100,
             'cornerFood': 900.0,
-            'enemyDist': -1000.0,
+            'enemyDist': -100.0,
             'allyDist': -10000.0,
             'successorScore': 1.0,
-            'distanceToFood': -1.0
+            'distanceToFood': -1000.0
         }
 
     def defFeatures(self, gamestate, action):
