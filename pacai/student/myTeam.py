@@ -88,8 +88,10 @@ class MasterAgent(CaptureAgent):
             features['distanceToFood'] = minDistance
             if self.getFood(successor).asList() != foodList:
                 features['distanceToFood'] *= -1
+
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
         enemyPos = [a.getPosition() for a in enemies if a.isGhost() and a.getPosition() is not None]
+
         ally = self.getAlly(successor)
         allyPos = successor.getAgentState(ally).getPosition()
         allyDist = self.getMazeDistance(myPos, allyPos)
@@ -101,13 +103,23 @@ class MasterAgent(CaptureAgent):
 
         # dist to enemy feature
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
-        enemyPos = [a.getPosition() for a in enemies if a.isGhost() and a.getPosition() is not None and a.isBraveGhost() is True]
-        if (len(enemyPos) > 0):
-            minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
-            features['enemyDist'] = 1.0 / minenemy
+        enemyPos = [a.getPosition() for a in enemies if a.isGhost() and a.getPosition() is not None]
+        enemyPositions = []
+        
+        if len(enemyPos) > 0:
+            for enemy in enemies:
+                if enemy.isGhost() and enemy.getPosition() is not None:
+                    if enemy.isBraveGhost():
+                        minenemy = -999999
+                        enemyPositions.append(-999999)
+                    else:
+                        minenemy = self.getMazeDistance(myPos, enemy.getPosition())
+                        enemyPositions.append(minenemy)
+                else:
+                    minenemy = 999999
+            features['enemyDist'] = 1.0 / min(enemyPositions) if len(enemyPositions) != 0 else 0.0
         else:
-            minenemy = 0.0
-            features['enemyDist'] = minenemy
+            features['enemyDist'] = 0.0
 
         closestFood = 999999
         foodCnt = self.getFood(gameState).count()
@@ -121,7 +133,7 @@ class MasterAgent(CaptureAgent):
 
         if minenemy >= 3:
             if foodCnt == futFoodCnt:
-                closestFood = features['distanceToFood']
+                closestFood = minDistance
             closestFood = 1.0 / closestFood if closestFood != 0 else 0.0  # reciprocal
             features['enemyDist'] = closestFood
         return features
