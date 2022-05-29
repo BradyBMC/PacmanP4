@@ -100,6 +100,7 @@ class MasterAgent(CaptureAgent):
 
         # dist to enemy feature
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
+        """
         enemyPos = [a.getPosition() for a in enemies if (a.isGhost() and a.getPosition() is not None and a.isBraveGhost() is True)]
         if (len(enemyPos) > 0):
             minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
@@ -107,6 +108,22 @@ class MasterAgent(CaptureAgent):
         else:
             minenemy = 99999999999999999.0
             features['enemyDist'] = minenemy
+        """
+        atkDefFlag = False
+        minenemy = 99999999999999999.0
+        for enemy in enemies:
+            if enemy.isGhost() and enemy.getPosition() is not None and enemy.isBraveGhost():
+                distToEnemy = self.getMazeDistance(myPos, enemy.getPosition())
+                if minenemy > distToEnemy:
+                    minenemy = distToEnemy
+            elif enemy.isGhost() and enemy.getPosition() is not None and not enemy.isBraveGhost():
+                distToEnemy = self.getMazeDistance(myPos, enemy.getPosition())
+                if distToEnemy <= 3:
+                    atkDefFlag == True
+
+        features['enemyDist'] = minenemy if not atkDefFlag else 0.0
+        features['scaredDefender'] = 999999.0 if atkDefFlag else 0.0
+
 
         closestFood = 999999
         foodCnt = self.getFood(gameState).count()
@@ -159,7 +176,8 @@ class MasterAgent(CaptureAgent):
             'enemyDist': -1000.0,
             'allyDist': -10000.0,
             'successorScore': 1.0,
-            'distanceToFood': -1.0
+            'distanceToFood': -1.0,
+            'scaredDefender': -1000.0
         }
 
     def defFeatures(self, gameState, action):
