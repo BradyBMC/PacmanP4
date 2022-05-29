@@ -112,6 +112,7 @@ class MasterAgent(CaptureAgent):
         # else:
         #    features['topRightFood'] = 0
 
+
         # dist to enemy feature
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
         enemyPos = [a.getPosition() for a in enemies if a.isGhost() and a.getPosition() is not None and a.isBraveGhost() is True]
