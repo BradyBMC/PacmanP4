@@ -117,13 +117,13 @@ class MasterAgent(CaptureAgent):
         futFoodCnt = successor.getFood().count()
 
         if minenemy < 5:
-            if len(gameState.getLegalActions(self.index)) == 2:
-                features['deadend'] = -3
+            if len(successor.getLegalActions(self.index)) == 2:
+                features['deadend'] = -1
             else:
                 features['deadend'] = 0
 
         # distance to enemy ghost
-        if minenemy >= 5:
+        if minenemy >= 3:
             if foodCnt == futFoodCnt:
                 closestFood = features['distanceToFood']
             closestFood = 1.0 / closestFood if closestFood != 0 else 0.0  # reciprocal
