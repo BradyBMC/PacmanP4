@@ -178,7 +178,10 @@ class MasterAgent(CaptureAgent):
         if gameState.getAgentState(self.index).isGhost() and gameState.getAgentState(self.index).isBraveGhost():
             if (len(enemyPos) > 0):
                 minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
-                features['invaderDist'] = 1.0 / minenemy
+                if minenemy <= 3:
+                    features['invaderDist'] = 999999
+                else:
+                    features['invaderDist'] = 0.0
             else:
                 minenemy = 0
                 features['invaderDist'] = 0.0
@@ -189,7 +192,7 @@ class MasterAgent(CaptureAgent):
 
     def getdefWeights(self, gameState, action):
         return {
-            'cornerFood': 900.0,
+            'cornerFood': 100.0,
             'invaderDist': 1000.0,
         }
 
