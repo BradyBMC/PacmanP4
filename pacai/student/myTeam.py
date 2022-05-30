@@ -223,9 +223,11 @@ class topAgent(MasterAgent):
             width += 1
         else:
             width -= 1
-        for y in range(height - 1, 1, -1):
+        last = None
+        for y in range(height - 1, int(height/3 * 2), -1):
             if not gameState.hasWall(width, y):
-                return (width, y)
+                last = (width, y)
+        return last
 
 class botAgent(MasterAgent):
     def __init__(self, index, **kwargs):
@@ -241,9 +243,11 @@ class botAgent(MasterAgent):
             width += 1
         else:
             width -= 1
-        for y in range(1, height):
+        last = None
+        for y in range(1, int(height / 4)):
             if not gameState.hasWall(width, y):
-                return (width, y)
+                last = (width, y)
+        return last
 
 def createTeam(firstIndex, secondIndex, isRed,
         first = 'pacai.agents.capture.dummy.DummyAgent',
