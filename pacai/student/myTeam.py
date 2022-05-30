@@ -22,7 +22,7 @@ class MasterAgent(CaptureAgent):
 
         # Your initialization code goes here, if you need any.
     
-    def CornerFood(self, foodList, gameState):
+    def center(self, gameState):
         pass
 
     def getSuccessor(self, gameState, action):
@@ -155,7 +155,6 @@ class MasterAgent(CaptureAgent):
         if oldcapsule > capsule:
             features['capsule'] = 0
             features['atecapsule'] = 1
-
         # If pacman powered up and ghost nearby, kill ghost
 
         return features
@@ -181,10 +180,8 @@ class MasterAgent(CaptureAgent):
         successor = self.getSuccessor(gameState, action)
         myPos = successor.getAgentState(self.index).getPosition()
         foodList = self.getFood(gameState).asList()
-
-        # find the food in the corner
-        cornerDist = self.getMazeDistance(self.CornerFood(foodList, gameState), myPos)
-        features['cornerFood'] = 1/(1 if cornerDist == 0 else cornerDist)
+        cornerDist = self.getMazeDistance(self.center(gameState), myPos)
+        features['center'] = 1/(1 if cornerDist == 0 else cornerDist)
 
         # attack invaders
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
@@ -207,7 +204,7 @@ class MasterAgent(CaptureAgent):
 
     def getdefWeights(self, gameState, action):
         return {
-            'cornerFood': 100.0,
+            'center': 100.0,
             'invaderDist': -99999.0,
             'numInv': -100.0,
         }
@@ -216,37 +213,37 @@ class topAgent(MasterAgent):
     def __init__(self, index, **kwargs):
         super().__init__(index, **kwargs)
 
-    def CornerFood(self, foodList, gameState):
+    def center(self, gameState):
         """
         Gets the top right corner food location
         """
-        food = foodList[0]
-        for dot in foodList:
-            if self.red:
-                if dot[0] > food[0] and dot[1] > food[1]:
-                    food = dot
-            else:
-                if dot[0] < food[0] and dot[1] > food[1]:
-                    food = dot
-        return food
+        height = int(gameState.getInitialLayout().getHeight())
+        width = int(gameState.getInitialLayout().getWidth() / 2)
+        if self.red:
+            width += 1
+        else:
+            width -= 1
+        for y in range(height - 1, 1, -1):
+            if not gameState.hasWall(width, y):
+                return (width, y)
 
 class botAgent(MasterAgent):
     def __init__(self, index, **kwargs):
         super().__init__(index, **kwargs)
 
-    def CornerFood(self, foodList, gameState):
+    def center(self, gameState):
         """
-        Gets the bottom right corner food location
+        Gets the top right corner food location
         """
-        food = foodList[0]
-        for dot in foodList:
-            if self.red:
-                if dot[0] > food[0] and dot[1] < food[1]:
-                    food = dot
-            else:
-                if dot[0] < food[0] and dot[1] < food[1]:
-                    food = dot
-        return food
+        height = int(gameState.getInitialLayout().getHeight())
+        width = int(gameState.getInitialLayout().getWidth() / 2)
+        if self.red:
+            width += 1
+        else:
+            width -= 1
+        for y in range(1, height):
+            if not gameState.hasWall(width, y):
+                return (width, y)
 
 def createTeam(firstIndex, secondIndex, isRed,
         first = 'pacai.agents.capture.dummy.DummyAgent',
