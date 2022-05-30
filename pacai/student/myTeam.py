@@ -22,7 +22,7 @@ class MasterAgent(CaptureAgent):
 
         # Your initialization code goes here, if you need any.
     
-    def CornerFood(self, foodList):
+    def CornerFood(self, foodList, gameState):
         pass
 
     def getSuccessor(self, gameState, action):
@@ -181,7 +181,9 @@ class MasterAgent(CaptureAgent):
         successor = self.getSuccessor(gameState, action)
         myPos = successor.getAgentState(self.index).getPosition()
         foodList = self.getFood(gameState).asList()
-        cornerDist = self.getMazeDistance(self.CornerFood(foodList), myPos)
+
+        # find the food in the corner
+        cornerDist = self.getMazeDistance(self.CornerFood(foodList, gameState), myPos)
         features['cornerFood'] = 1/(1 if cornerDist == 0 else cornerDist)
 
         # attack invaders
@@ -214,28 +216,36 @@ class topAgent(MasterAgent):
     def __init__(self, index, **kwargs):
         super().__init__(index, **kwargs)
 
-    def CornerFood(self, foodList):
+    def CornerFood(self, foodList, gameState):
         """
         Gets the top right corner food location
         """
         food = foodList[0]
         for dot in foodList:
-            if dot[0] > food[0] and dot[1] > food[1]:
-                food = dot
+            if self.red:
+                if dot[0] > food[0] and dot[1] > food[1]:
+                    food = dot
+            else:
+                if dot[0] < food[0] and dot[1] > food[1]:
+                    food = dot
         return food
 
 class botAgent(MasterAgent):
     def __init__(self, index, **kwargs):
         super().__init__(index, **kwargs)
 
-    def CornerFood(self, foodList):
+    def CornerFood(self, foodList, gameState):
         """
-        Gets the top right corner food location
+        Gets the bottom right corner food location
         """
         food = foodList[0]
         for dot in foodList:
-            if dot[0] > food[0] and dot[1] < food[1]:
-                food = dot
+            if self.red:
+                if dot[0] > food[0] and dot[1] < food[1]:
+                    food = dot
+            else:
+                if dot[0] < food[0] and dot[1] < food[1]:
+                    food = dot
         return food
 
 def createTeam(firstIndex, secondIndex, isRed,
