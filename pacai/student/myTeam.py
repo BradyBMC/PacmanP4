@@ -168,10 +168,8 @@ class MasterAgent(CaptureAgent):
             for cap in capsule:
                 capsuleDist = self.getMazeDistance(myPos, cap)
                 features["capsule"] = 1 / (1 if capsuleDist == 0 else capsuleDist)
-                """
                 if capsuleDist <= 3:
                     features["distanceToFood"] = capsuleDist
-                """
         else:
             features["capsule"] = 1.0 / 0.1
 
