@@ -71,7 +71,7 @@ class MasterAgent(CaptureAgent):
 
     def getAlly(self, gameState):
         for index in self.getTeam(gameState):
-            if self.index != index:
+            if self.index == index:
                 return index
 
     def atkFeatures(self, gameState, action):
@@ -160,9 +160,12 @@ class MasterAgent(CaptureAgent):
         # Pacman distance to powerup pellet
         oldcapsule = gameState.getCapsules()
         capsule = successor.getCapsules()
-        for cap in capsule:
-            capsuleDist = self.getMazeDistance(myPos, cap)
-            features["capsule"] = 1 / (1 if capsuleDist == 0 else capsuleDist)
+        if len(capsule) > 0:
+            for cap in capsule:
+                capsuleDist = self.getMazeDistance(myPos, cap)
+                features["capsule"] = 1 / (1 if capsuleDist == 0 else capsuleDist)
+        else:
+            features["capsule"] = 1.0 / 0.1
 
         if oldcapsule > capsule:
             features["capsule"] = 0
@@ -177,73 +180,72 @@ class MasterAgent(CaptureAgent):
         The keys match up with the return from `ReflexCaptureAgent.getFeatures`.
         """
         return {
-            "capsule": 100.0,
-            "atecapsule": 60000.0,
-            "deadend": -99999999.0,
+            "capsule": 700.0,
+            "atecapsule": 5000.0,
+            "deadend": -200.0,
             "stop": -999999.0,
-            "enemyDist": -999999.0,
-            "allyDist": 0.0,
-            "successorScore": 600.0,
-            "distanceToFood": -100.0,
+            "enemyDist": -10000.0,
+            "allyDist": -600.0,
+            "successorScore": 800.0,
+            "distanceToFood": -10.0,
             "scaredDefender": 10000.0,
         }
-
-    def nearestFood(self, gameState, myPos):
-        low = 999999
-        pos = None
-        foodList = self.getFood(gameState).asList()
-        for food in foodList:
-            tmp = self.getMazeDistance(myPos, food)
-            if low > tmp:
-                low = tmp
-                pos = food
-        return pos
 
     def defFeatures(self, gameState, action):
         features = {}
         successor = self.getSuccessor(gameState, action)
-        oldPos = gameState.getAgentState(self.index).getPosition()
         myPos = successor.getAgentState(self.index).getPosition()
 
-        # Pacman avoids being near an ally
-        # ally = self.getAlly(successor)
-        # allyPos = successor.getAgentState(ally).getPosition()
-        # allyDist = self.getMazeDistance(myPos, allyPos)
-        # allyDist = 1 if allyDist == 0 else allyDist
-        # features["allyDist"] = 1 / allyDist
-
+        # attack invaders
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
         enemyPos = [
             a.getPosition()
             for a in enemies
             if (a.isPacman() and a.getPosition() is not None)
         ]
-
-        # Number of invaders
         features["numInv"] = len(enemyPos)
-
-        # Attack invaders
         if len(enemyPos) > 0 and not successor.getAgentState(self.index).isScared():
             minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
             features["invDist"] = 1 / (1 if minenemy == 0 else minenemy)
-
-        # Attacks if ghost is scared and runs to nearest food
-        elif len(enemyPos) > 0 and successor.getAgentState(self.index).isScared():
-            foodPos = self.nearestFood(successor, myPos)
-            newDist = self.getMazeDistance(myPos, foodPos)
-            oldDist = self.getMazeDistance(oldPos, foodPos)
-            if newDist < oldDist:
-                features['runDown'] = 1
+        """
+        if (
+            successor.getAgentState(self.index).isGhost()
+            and successor.getAgentState(self.index).isBraveGhost()
+        ):
+            if len(enemyPos) > 0:
+                minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
+                if minenemy <= 4:
+                    features["invDist"] = minenemy
+                else:
+                    features["invDist"] = 0
             else:
-                features['runDown'] = 0
+                minenemy = 0
+                features["invDist"] = 0
+        else:
+            features["invDist"] = 0
+        """
+        """
+        if successor.getAgentState(self.index).isScaredGhost():
+            if len(enemyPos) > 0:
+                minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
+                if minenemy <= 4:
+                    features['scared'] = 1
+                else:
+                    features['scared'] = 0
+            else:
+                features['scared'] = 0
+        else:
+            features['scared'] = 0
+        """       
+
         return features
 
     def getdefWeights(self, gameState, action):
         return {
             "invDist": 500.0,
-            "numInv": -5000.0,
-            "allyDist": -500.0,
-            "runDown": 100
+            "numInv": -50000.0,
+            "scared": -10000.0,
+            "allyDist": -1000.0
         }
 
     def neutralFeatures(self, gameState, action):
@@ -252,11 +254,25 @@ class MasterAgent(CaptureAgent):
         myPos = successor.getAgentState(self.index).getPosition()
         cornerDist = self.getMazeDistance(self.center(gameState), myPos)
         features["center"] = 1 / (1 if cornerDist == 0 else cornerDist)
+
+        enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
+        enemyPos = [
+            a.getPosition()
+            for a in enemies
+            if (a.isGhost() and a.getPosition() is not None)
+        ]
+        if len(enemyPos) > 0 and not successor.getAgentState(self.index).isScared():
+            minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
+            if minenemy <= 2:
+                features["borderEnemy"] = 99999.0
+            else:
+                features["borderEnemy"] = 0.0
         return features
 
     def getNeutralWeights(self, gameState, action):
         return {
-            "center": 1000
+            "center": 1000,
+            "borderEnemy": -5000
         }
 
 class topAgent(MasterAgent):
@@ -270,9 +286,9 @@ class topAgent(MasterAgent):
         height = int(gameState.getInitialLayout().getHeight())
         width = int(gameState.getInitialLayout().getWidth() / 2)
         if self.red:
-            width += 1
+            width += 2
         else:
-            width -= 1
+            width -= 2
         last = None
         for y in range(height - 1, int(height / 3 * 2), -1):
             if not gameState.hasWall(width, y):
@@ -291,9 +307,9 @@ class botAgent(MasterAgent):
         height = int(gameState.getInitialLayout().getHeight())
         width = int(gameState.getInitialLayout().getWidth() / 2)
         if self.red:
-            width += 1
+            width += 2
         else:
-            width -= 1
+            width -= 2
         last = None
         for y in range(1, int(height / 4)):
             if not gameState.hasWall(width, y):
