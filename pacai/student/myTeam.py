@@ -188,61 +188,62 @@ class MasterAgent(CaptureAgent):
             "scaredDefender": 10000.0,
         }
 
+    def nearestFood(self, gameState, myPos):
+        low = 999999
+        pos = None
+        foodList = self.getFood(gameState).asList()
+        for food in foodList:
+            tmp = self.getMazeDistance(myPos, food)
+            if low > tmp:
+                low = tmp
+                pos = food
+        return pos
+
     def defFeatures(self, gameState, action):
         features = {}
         successor = self.getSuccessor(gameState, action)
+        oldPos = gameState.getAgentState(self.index).getPosition()
         myPos = successor.getAgentState(self.index).getPosition()
 
-        # attack invaders
+        # Pacman avoids being near an ally
+        # ally = self.getAlly(successor)
+        # allyPos = successor.getAgentState(ally).getPosition()
+        # allyDist = self.getMazeDistance(myPos, allyPos)
+        # allyDist = 1 if allyDist == 0 else allyDist
+        # features["allyDist"] = 1 / allyDist
+
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
         enemyPos = [
             a.getPosition()
             for a in enemies
             if (a.isPacman() and a.getPosition() is not None)
         ]
+
+        # Number of invaders
         features["numInv"] = len(enemyPos)
+
+        # Attack invaders
         if len(enemyPos) > 0 and not successor.getAgentState(self.index).isScared():
             minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
             features["invDist"] = 1 / (1 if minenemy == 0 else minenemy)
-        """
-        if (
-            successor.getAgentState(self.index).isGhost()
-            and successor.getAgentState(self.index).isBraveGhost()
-        ):
-            if len(enemyPos) > 0:
-                minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
-                if minenemy <= 4:
-                    features["invDist"] = minenemy
-                else:
-                    features["invDist"] = 0
-            else:
-                minenemy = 0
-                features["invDist"] = 0
-        else:
-            features["invDist"] = 0
-        """
-        """
-        if successor.getAgentState(self.index).isScaredGhost():
-            if len(enemyPos) > 0:
-                minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
-                if minenemy <= 4:
-                    features['scared'] = 1
-                else:
-                    features['scared'] = 0
-            else:
-                features['scared'] = 0
-        else:
-            features['scared'] = 0
-        """       
 
+        # Attacks if ghost is scared and runs to nearest food
+        elif len(enemyPos) > 0 and successor.getAgentState(self.index).isScared():
+            foodPos = self.nearestFood(successor, myPos)
+            newDist = self.getMazeDistance(myPos, foodPos)
+            oldDist = self.getMazeDistance(oldPos, foodPos)
+            if newDist < oldDist:
+                features['runDown'] = 1
+            else:
+                features['runDown'] = 0
         return features
 
     def getdefWeights(self, gameState, action):
         return {
             "invDist": 500.0,
-            "numInv": -50000.0,
-            "scared": -10000.0,
-            "allyDist": -1000.0
+            "numInv": -5000.0,
+            "allyDist": -500.0,
+            "runDown": 100
         }
 
     def neutralFeatures(self, gameState, action):
@@ -269,9 +270,9 @@ class topAgent(MasterAgent):
         height = int(gameState.getInitialLayout().getHeight())
         width = int(gameState.getInitialLayout().getWidth() / 2)
         if self.red:
-            width += 2
+            width += 1
         else:
-            width -= 2
+            width -= 1
         last = None
         for y in range(height - 1, int(height / 3 * 2), -1):
             if not gameState.hasWall(width, y):
@@ -290,9 +291,9 @@ class botAgent(MasterAgent):
         height = int(gameState.getInitialLayout().getHeight())
         width = int(gameState.getInitialLayout().getWidth() / 2)
         if self.red:
-            width += 2
+            width += 1
         else:
-            width -= 2
+            width -= 1
         last = None
         for y in range(1, int(height / 4)):
             if not gameState.hasWall(width, y):
