@@ -6,6 +6,7 @@ from pacai.core import distanceCalculator, gamestate
 from pacai.util import priorityQueue
 from pacai.util.priorityQueue import PriorityQueue
 
+
 class MasterAgent(CaptureAgent):
     def __init__(self, index, **kwargs):
         super().__init__(index, **kwargs)
@@ -21,18 +22,18 @@ class MasterAgent(CaptureAgent):
         super().registerInitialState(gameState)
 
         # Your initialization code goes here, if you need any.
-    
+
     def center(self, gameState):
         pass
 
     def getSuccessor(self, gameState, action):
         successor = gameState.generateSuccessor(self.index, action)
         pos = successor.getAgentState(self.index).getPosition()
-        if (pos != util.nearestPoint(pos)):
+        if pos != util.nearestPoint(pos):
             # Only half a grid position was covered.
             return successor.generateSuccessor(self.index, action)
         else:
-            return successor   
+            return successor
 
     def chooseAction(self, gameState):
         actions = gameState.getLegalActions(self.index)
@@ -53,6 +54,7 @@ class MasterAgent(CaptureAgent):
             features = self.atkFeatures(gameState, action)
             weights = self.getatkWeights(gameState, action)
         stateEval = sum(features[feature] * weights[feature] for feature in features)
+        # stateEval = sum(weights[key]*features.get(key, 0) for key in weights)
         return stateEval
 
     def getAlly(self, gameState):
@@ -66,25 +68,25 @@ class MasterAgent(CaptureAgent):
         """
         features = {}
         successor = self.getSuccessor(gameState, action)
-        features['successorScore'] = self.getScore(successor)
+        features["successorScore"] = self.getScore(successor)
         myPos = successor.getAgentState(self.index).getPosition()
         oldPos = gameState.getAgentState(self.index).getPosition()
         foodList = self.getFood(gameState).asList()
         newfoodList = self.getFood(successor).asList()
 
         # Pacman gathers the distance to all food
-        if (len(foodList) > 0):
+        if len(foodList) > 0:
             minDistance = min([self.getMazeDistance(myPos, food) for food in foodList])
-            features['distanceToFood'] = minDistance
+            features["distanceToFood"] = minDistance
             if self.getFood(successor).asList() != foodList:
-                features['distanceToFood'] *= -1
+                features["distanceToFood"] *= -1
 
         # Pacman avoids being near ally
         ally = self.getAlly(successor)
         allyPos = successor.getAgentState(ally).getPosition()
         allyDist = self.getMazeDistance(myPos, allyPos)
-        allyDist = .5 if allyDist == 0 else allyDist
-        features['allyDist'] = 1/allyDist
+        allyDist = 0.5 if allyDist == 0 else allyDist
+        features["allyDist"] = 1 / allyDist
 
         # dist to enemy feature
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
@@ -98,54 +100,61 @@ class MasterAgent(CaptureAgent):
             features['enemyDist'] = minenemy
         """
         atkDefFlag = False
-        minenemy = 99999999999999999.0
+        minenemy = 999999.0
         for enemy in enemies:
-            if enemy.isGhost() and enemy.getPosition() is not None and enemy.isBraveGhost():
+            if (
+                enemy.isGhost()
+                and enemy.getPosition() is not None
+                and enemy.isBraveGhost()
+            ):
                 distToEnemy = self.getMazeDistance(myPos, enemy.getPosition())
                 if minenemy > distToEnemy:
                     minenemy = distToEnemy
-            elif enemy.isGhost() and enemy.getPosition() is not None and not enemy.isBraveGhost():
+            elif (
+                enemy.isGhost()
+                and enemy.getPosition() is not None
+                and not enemy.isBraveGhost()
+            ):
                 distToEnemy = self.getMazeDistance(myPos, enemy.getPosition())
                 if distToEnemy <= 3:
                     atkDefFlag == True
 
-        features['enemyDist'] = minenemy if not atkDefFlag else 0.0
-        features['scaredDefender'] = 999999.0 if atkDefFlag else 0.0
+        features["enemyDist"] = minenemy if not atkDefFlag else 0.0
+        features["scaredDefender"] = 999999.0 if atkDefFlag else 0.0
 
         closestFood = 999999
         foodCnt = self.getFood(gameState).count()
         futFoodCnt = successor.getFood().count()
 
         # Avoid dead ends
-        if minenemy < 5:
-            if len(successor.getLegalActions(self.index)) == 2:
-                features['deadend'] = -1
-            else:
-                features['deadend'] = 0
+        if len(gameState.getLegalActions(self.index)) <= 2:
+            features["deadend"] = 1.0
+        else:
+            features["deadend"] = 0.0
 
         # distance to enemy ghost
         if minenemy >= 4:
             if foodCnt == futFoodCnt:
-                closestFood = features['distanceToFood']
+                closestFood = features["distanceToFood"]
             closestFood = 1.0 / closestFood if closestFood != 0 else 0.0  # reciprocal
-            features['enemyDist'] = closestFood
+            features["enemyDist"] = -1.0 * closestFood
 
         # Pacman doesn't stop in enemy territory
         if oldPos == myPos:
-            features['stop'] = 1
+            features["stop"] = 1
         else:
-            features['stop'] = 0
+            features["stop"] = 0
 
         # Pacman distance to powerup pellet
         oldcapsule = gameState.getCapsules()
         capsule = successor.getCapsules()
         for cap in capsule:
             capsuleDist = self.getMazeDistance(myPos, cap)
-            features['capsule'] = 1/(1 if capsuleDist == 0 else capsuleDist)
+            features["capsule"] = 1 / (1 if capsuleDist == 0 else capsuleDist)
 
         if oldcapsule > capsule:
-            features['capsule'] = 0
-            features['atecapsule'] = 1
+            features["capsule"] = 0
+            features["atecapsule"] = 1
         # If pacman powered up and ghost nearby, kill ghost
 
         return features
@@ -156,15 +165,15 @@ class MasterAgent(CaptureAgent):
         The keys match up with the return from `ReflexCaptureAgent.getFeatures`.
         """
         return {
-            'capsule': 30.0,
-            'atecapsule': 60000.0,
-            'deadend': -999999.0,
-            'stop': -99999999.0,
-            'enemyDist': -1000.0,
-            'allyDist': -10000.0,
-            'successorScore': 1.0,
-            'distanceToFood': -1.0,
-            'scaredDefender': -1000.0
+            "capsule": 30.0,
+            "atecapsule": 60000.0,
+            "deadend": -9999.0,
+            "stop": -999999.0,
+            "enemyDist": -999999.0,
+            "allyDist": -10000.0,
+            "successorScore": 100.0,
+            "distanceToFood": -10.0,
+            "scaredDefender": 10000.0,
         }
 
     def defFeatures(self, gameState, action):
@@ -173,33 +182,41 @@ class MasterAgent(CaptureAgent):
         myPos = successor.getAgentState(self.index).getPosition()
         foodList = self.getFood(gameState).asList()
         cornerDist = self.getMazeDistance(self.center(gameState), myPos)
-        features['center'] = 1/(1 if cornerDist == 0 else cornerDist)
+        features["center"] = 1 / (1 if cornerDist == 0 else cornerDist)
 
         # attack invaders
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
-        features['numInv'] = len(enemies)
-        enemyPos = [a.getPosition() for a in enemies if (a.isGhost() and a.getPosition() is not None)]
-        if gameState.getAgentState(self.index).isGhost() and gameState.getAgentState(self.index).isBraveGhost():
-            if (len(enemyPos) > 0):
+        features["numInv"] = len(enemies)
+        enemyPos = [
+            a.getPosition()
+            for a in enemies
+            if (a.isGhost() and a.getPosition() is not None)
+        ]
+        if (
+            gameState.getAgentState(self.index).isGhost()
+            and gameState.getAgentState(self.index).isBraveGhost()
+        ):
+            if len(enemyPos) > 0:
                 minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
                 if minenemy <= 3:
-                    features['invaderDist'] = 999999
+                    features["invaderDist"] = 999999
                 else:
-                    features['invaderDist'] = 0.0
+                    features["invaderDist"] = 0.0
             else:
                 minenemy = 0
-                features['invaderDist'] = 0.0
+                features["invaderDist"] = 0.0
         else:
-            features['invaderDist'] = 0.0
+            features["invaderDist"] = 0.0
 
         return features
 
     def getdefWeights(self, gameState, action):
         return {
-            'center': 100.0,
-            'invaderDist': -99999.0,
-            'numInv': -100.0,
+            "center": 100.0,
+            "invaderDist": -99999.0,
+            "numInv": -1000.0,
         }
+
 
 class topAgent(MasterAgent):
     def __init__(self, index, **kwargs):
@@ -216,10 +233,11 @@ class topAgent(MasterAgent):
         else:
             width -= 2
         last = None
-        for y in range(height - 1, int(height/3 * 2), -1):
+        for y in range(height - 1, int(height / 3 * 2), -1):
             if not gameState.hasWall(width, y):
                 last = (width, y)
         return last
+
 
 class botAgent(MasterAgent):
     def __init__(self, index, **kwargs):
@@ -241,9 +259,14 @@ class botAgent(MasterAgent):
                 last = (width, y)
         return last
 
-def createTeam(firstIndex, secondIndex, isRed,
-        first = 'pacai.agents.capture.dummy.DummyAgent',
-        second = 'pacai.agents.capture.dummy.DummyAgent'):
+
+def createTeam(
+    firstIndex,
+    secondIndex,
+    isRed,
+    first="pacai.agents.capture.dummy.DummyAgent",
+    second="pacai.agents.capture.dummy.DummyAgent",
+):
     """
     This function should return a list of two agents that will form the capture team,
     initialized using firstIndex and secondIndex as their agent indexed.
@@ -251,7 +274,4 @@ def createTeam(firstIndex, secondIndex, isRed,
     and will be False if the blue team is being created.
     """
 
-    return [
-        topAgent(firstIndex),
-        botAgent(secondIndex)
-    ]
+    return [topAgent(firstIndex), botAgent(secondIndex)]
