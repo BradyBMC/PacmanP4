@@ -1,10 +1,10 @@
 import random
 from pacai.util import util
-from pacai.util import reflection
+# from pacai.util import reflection
 from pacai.agents.capture.capture import CaptureAgent
-from pacai.core import distanceCalculator, gamestate
-from pacai.util import priorityQueue
-from pacai.util.priorityQueue import PriorityQueue
+# from pacai.core import distanceCalculator, gamestate
+# from pacai.util import priorityQueue
+# from pacai.util.priorityQueue import PriorityQueue
 
 
 class MasterAgent(CaptureAgent):
@@ -38,7 +38,7 @@ class MasterAgent(CaptureAgent):
     def chooseAction(self, gameState):
         actions = gameState.getLegalActions(self.index)
         for action in actions:
-            if action == 'Stop':
+            if action == "Stop":
                 actions.remove(action)
 
         values = [self.evaluate(gameState, a) for a in actions]
@@ -84,7 +84,7 @@ class MasterAgent(CaptureAgent):
         myPos = successor.getAgentState(self.index).getPosition()
         oldPos = gameState.getAgentState(self.index).getPosition()
         foodList = self.getFood(gameState).asList()
-        newfoodList = self.getFood(successor).asList()
+        # newfoodList = self.getFood(successor).asList()
 
         # Pacman gathers the distance to all food
         if len(foodList) > 0:
@@ -103,7 +103,8 @@ class MasterAgent(CaptureAgent):
         # dist to enemy feature
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
         """
-        enemyPos = [a.getPosition() for a in enemies if (a.isGhost() and a.getPosition() is not None and a.isBraveGhost() is True)]
+        enemyPos = [a.getPosition() for a in enemies if (a.isGhost() and 
+        a.getPosition() is not None and a.isBraveGhost() is True)]
         if (len(enemyPos) > 0):
             minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
             features['enemyDist'] = 1.0 / minenemy
@@ -130,13 +131,15 @@ class MasterAgent(CaptureAgent):
             ):
                 distToEnemy = self.getMazeDistance(myPos, enemy.getPosition())
                 if distToEnemy <= 4:
-                    atkDefFlag == True
+                    atkDefFlag is True
                     if distToEnemy < minScaredEnemy:
                         minScaredEnemy = distToEnemy
 
         features["enemyDist"] = 1.0 / minenemy if not atkDefFlag else 0.0
         features["scaredDefender"] = 1.0 / minScaredEnemy if atkDefFlag else 0.0
-        features["distanceToFood"] = 1.0 / minScaredEnemy if atkDefFlag else features["distanceToFood"]
+        features["distanceToFood"] = (
+            1.0 / minScaredEnemy if atkDefFlag else features["distanceToFood"]
+        )
 
         closestFood = 999999
         foodCnt = self.getFood(gameState).count()
@@ -234,13 +237,13 @@ class MasterAgent(CaptureAgent):
             if len(enemyPos) > 0:
                 minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
                 if minenemy <= 4:
-                    features['scared'] = 99999.0
+                    features["scared"] = 99999.0
                 else:
-                    features['scared'] = 0
+                    features["scared"] = 0
             else:
-                features['scared'] = 0
+                features["scared"] = 0
         else:
-            features['scared'] = 0
+            features["scared"] = 0
 
         return features
 
@@ -249,7 +252,7 @@ class MasterAgent(CaptureAgent):
             "invDist": 500.0,
             "numInv": -50000.0,
             "scared": -10000.0,
-            "allyDist": -1000.0
+            "allyDist": -1000.0,
         }
 
     def neutralFeatures(self, gameState, action):
@@ -275,10 +278,8 @@ class MasterAgent(CaptureAgent):
         return features
 
     def getNeutralWeights(self, gameState, action):
-        return {
-            "center": 1000,
-            "borderEnemy": -5000
-        }
+        return {"center": 1000, "borderEnemy": -5000}
+
 
 class topAgent(MasterAgent):
     def __init__(self, index, **kwargs):
@@ -320,6 +321,7 @@ class botAgent(MasterAgent):
             if not gameState.hasWall(width, y):
                 last = (width, y)
         return last
+
 
 def createTeam(
     firstIndex,
