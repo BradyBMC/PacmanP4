@@ -119,7 +119,7 @@ class MasterAgent(CaptureAgent):
                 if distToEnemy <= 3:
                     atkDefFlag == True
 
-        features["enemyDist"] = minenemy if not atkDefFlag else 0.0
+        features["enemyDist"] = 1.0 / minenemy if not atkDefFlag else 0.0
         features["scaredDefender"] = 999999.0 if atkDefFlag else 0.0
 
         closestFood = 999999
@@ -193,12 +193,12 @@ class MasterAgent(CaptureAgent):
             if (a.isGhost() and a.getPosition() is not None)
         ]
         if (
-            gameState.getAgentState(self.index).isGhost()
-            and gameState.getAgentState(self.index).isBraveGhost()
+            successor.getAgentState(self.index).isGhost()
+            and successor.getAgentState(self.index).isBraveGhost()
         ):
             if len(enemyPos) > 0:
                 minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
-                if minenemy <= 3:
+                if minenemy <= 4:
                     features["invaderDist"] = 999999
                 else:
                     features["invaderDist"] = 0.0
@@ -213,8 +213,8 @@ class MasterAgent(CaptureAgent):
     def getdefWeights(self, gameState, action):
         return {
             "center": 100.0,
-            "invaderDist": -99999.0,
-            "numInv": -1000.0,
+            "invaderDist": 99999.0,
+            "numInv": 1000.0,
         }
 
 
