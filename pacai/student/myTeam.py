@@ -165,13 +165,13 @@ class MasterAgent(CaptureAgent):
         The keys match up with the return from `ReflexCaptureAgent.getFeatures`.
         """
         return {
-            "capsule": 30.0,
+            "capsule": 100.0,
             "atecapsule": 60000.0,
-            "deadend": -9999.0,
+            "deadend": -99999999.0,
             "stop": -999999.0,
             "enemyDist": -999999.0,
             "allyDist": -10000.0,
-            "successorScore": 100.0,
+            "successorScore": 600.0,
             "distanceToFood": -10.0,
             "scaredDefender": 10000.0,
         }
@@ -198,25 +198,37 @@ class MasterAgent(CaptureAgent):
         ):
             if len(enemyPos) > 0:
                 minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
-                if minenemy <= 3:
-                    features["invaderDist"] = 1.0
-                else:
+                if minenemy <= 4:
                     features["invaderDist"] = 0.0
+                else:
+                    features["invaderDist"] = 1.0
             else:
                 minenemy = 0
-                features["invaderDist"] = 0.0
+                features["invaderDist"] = 1.0
         else:
-            features["invaderDist"] = 0.0
+            features["invaderDist"] = 1.0
+
+        if successor.getAgentState(self.index).isScaredGhost():
+            if len(enemyPos) > 0:
+                minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
+                if minenemy <= 4:
+                    features['scared'] = 1
+                else:
+                    features['scared'] = 0
+            else:
+                features['scared'] = 0
+        else:
+            features['scared'] = 0
 
         return features
 
     def getdefWeights(self, gameState, action):
         return {
             "center": 100.0,
-            "invaderDist": 500.0,
-            "numInv": -999999.0,
+            "invaderDist": -500.0,
+            "numInv": -9999999999.0,
+            "scared": -1000.0
         }
-
 
 class topAgent(MasterAgent):
     def __init__(self, index, **kwargs):
@@ -258,7 +270,6 @@ class botAgent(MasterAgent):
             if not gameState.hasWall(width, y):
                 last = (width, y)
         return last
-
 
 def createTeam(
     firstIndex,
