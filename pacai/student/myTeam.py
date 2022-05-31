@@ -204,6 +204,8 @@ class MasterAgent(CaptureAgent):
         if len(enemyPos) > 0 and not successor.getAgentState(self.index).isScared():
             minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
             features["invDist"] = 1 / (1 if minenemy == 0 else minenemy)
+        # elif len(enemyPos) > 0 and successor.getAgentState(self.index).isScared():
+        #    minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
         """
         if (
             successor.getAgentState(self.index).isGhost()
