@@ -113,6 +113,7 @@ class MasterAgent(CaptureAgent):
         """
         atkDefFlag = False
         minenemy = 999999.0
+        minScaredEnemy = 999999.0
         for enemy in enemies:
             if (
                 enemy.isGhost()
@@ -128,11 +129,14 @@ class MasterAgent(CaptureAgent):
                 and not enemy.isBraveGhost()
             ):
                 distToEnemy = self.getMazeDistance(myPos, enemy.getPosition())
-                if distToEnemy <= 3:
+                if distToEnemy <= 4:
                     atkDefFlag == True
+                    if distToEnemy < minScaredEnemy:
+                        minScaredEnemy = distToEnemy
 
         features["enemyDist"] = 1.0 / minenemy if not atkDefFlag else 0.0
-        features["scaredDefender"] = 999999.0 if atkDefFlag else 0.0
+        features["scaredDefender"] = 1.0 / minScaredEnemy if atkDefFlag else 0.0
+        features["distanceToFood"] = 1.0 / minScaredEnemy if atkDefFlag else features["distanceToFood"]
 
         closestFood = 999999
         foodCnt = self.getFood(gameState).count()
@@ -164,6 +168,10 @@ class MasterAgent(CaptureAgent):
             for cap in capsule:
                 capsuleDist = self.getMazeDistance(myPos, cap)
                 features["capsule"] = 1 / (1 if capsuleDist == 0 else capsuleDist)
+                """
+                if capsuleDist <= 3:
+                    features["distanceToFood"] = capsuleDist
+                """
         else:
             features["capsule"] = 1.0 / 0.1
 
@@ -255,6 +263,7 @@ class MasterAgent(CaptureAgent):
         cornerDist = self.getMazeDistance(self.center(gameState), myPos)
         features["center"] = 1 / (1 if cornerDist == 0 else cornerDist)
 
+        # if an enemy ghost is near/camping the mid line then avoid it
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
         enemyPos = [
             a.getPosition()
