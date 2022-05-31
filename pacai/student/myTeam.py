@@ -186,20 +186,20 @@ class MasterAgent(CaptureAgent):
 
         # attack invaders
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
-        features["numInv"] = len(enemies)
         enemyPos = [
             a.getPosition()
             for a in enemies
-            if (a.isGhost() and a.getPosition() is not None)
+            if (a.isPacman() and a.getPosition() is not None)
         ]
+        features["numInv"] = len(enemyPos)
         if (
             successor.getAgentState(self.index).isGhost()
             and successor.getAgentState(self.index).isBraveGhost()
         ):
             if len(enemyPos) > 0:
                 minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
-                if minenemy <= 4:
-                    features["invaderDist"] = 999999
+                if minenemy <= 3:
+                    features["invaderDist"] = 99999.0
                 else:
                     features["invaderDist"] = 0.0
             else:
@@ -213,8 +213,8 @@ class MasterAgent(CaptureAgent):
     def getdefWeights(self, gameState, action):
         return {
             "center": 100.0,
-            "invaderDist": 99999.0,
-            "numInv": 1000.0,
+            "invaderDist": 500.0,
+            "numInv": -999999.0,
         }
 
 
