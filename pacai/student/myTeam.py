@@ -71,7 +71,7 @@ class MasterAgent(CaptureAgent):
 
     def getAlly(self, gameState):
         for index in self.getTeam(gameState):
-            if self.index == index:
+            if self.index != index:
                 return index
 
     def atkFeatures(self, gameState, action):
@@ -182,7 +182,7 @@ class MasterAgent(CaptureAgent):
             "deadend": -99999999.0,
             "stop": -999999.0,
             "enemyDist": -999999.0,
-            "allyDist": -10000.0,
+            "allyDist": 0.0,
             "successorScore": 600.0,
             "distanceToFood": -100.0,
             "scaredDefender": 10000.0,
