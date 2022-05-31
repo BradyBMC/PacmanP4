@@ -186,11 +186,11 @@ class MasterAgent(CaptureAgent):
         The keys match up with the return from `ReflexCaptureAgent.getFeatures`.
         """
         return {
-            "capsule": 700.0,
+            "capsule": 1000.0,
             "atecapsule": 5000.0,
             "deadend": -200.0,
             "stop": -999999.0,
-            "enemyDist": -10000.0,
+            "enemyDist": -100000.0,
             "allyDist": -600.0,
             "successorScore": 800.0,
             "distanceToFood": -10.0,
@@ -230,19 +230,17 @@ class MasterAgent(CaptureAgent):
         else:
             features["invDist"] = 0
         """
-        """
         if successor.getAgentState(self.index).isScaredGhost():
             if len(enemyPos) > 0:
                 minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
                 if minenemy <= 4:
-                    features['scared'] = 1
+                    features['scared'] = 99999.0
                 else:
                     features['scared'] = 0
             else:
                 features['scared'] = 0
         else:
             features['scared'] = 0
-        """       
 
         return features
 
