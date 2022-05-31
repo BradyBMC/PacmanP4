@@ -37,6 +37,10 @@ class MasterAgent(CaptureAgent):
 
     def chooseAction(self, gameState):
         actions = gameState.getLegalActions(self.index)
+        for action in actions:
+            if action == 'Stop':
+                actions.remove(action)
+
         values = [self.evaluate(gameState, a) for a in actions]
         maxValue = max(values)
         bestActions = [a for a, v in zip(actions, values) if v == maxValue]
@@ -172,7 +176,7 @@ class MasterAgent(CaptureAgent):
             "enemyDist": -999999.0,
             "allyDist": -10000.0,
             "successorScore": 100.0,
-            "distanceToFood": -10.0,
+            "distanceToFood": -100.0,
             "scaredDefender": 10000.0,
         }
 
@@ -198,8 +202,8 @@ class MasterAgent(CaptureAgent):
         ):
             if len(enemyPos) > 0:
                 minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
-                if minenemy <= 3:
-                    features["invaderDist"] = 99999.0
+                if minenemy <= 4:
+                    features["invaderDist"] = 999999.0
                 else:
                     features["invaderDist"] = 0.0
             else:
@@ -212,9 +216,9 @@ class MasterAgent(CaptureAgent):
 
     def getdefWeights(self, gameState, action):
         return {
-            "center": 100.0,
-            "invaderDist": 500.0,
-            "numInv": -999999.0,
+            "center": 10.0,
+            "invaderDist": -10000.0,
+            "numInv": -1000.0,
         }
 
 
