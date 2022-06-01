@@ -101,7 +101,7 @@ class MasterAgent(CaptureAgent):
 
         # Avoid dead ends
         if len(gameState.getLegalActions(self.index)) <= 2:
-            features["deadend"] = 1.0
+            features["deadend"] = 2.0
         else:
             features["deadend"] = 0.0
 
@@ -191,14 +191,14 @@ class MasterAgent(CaptureAgent):
         The keys match up with the return from `ReflexCaptureAgent.getFeatures`.
         """
         return {
-            "capsule": 12.5,
+            "capsule": 2550,
             "atecapsule": 50000.0,
-            "deadend": -9999999.0,
+            "deadend": -9999999999.0,
             "stop": -400.0,
             "enemyDist": -500.0,
             "allyDist": -700.0,
             "successorScore": 800.0,
-            "distanceToFood": -10.0,
+            "distanceToFood": -20.0,
             "scaredDefender": 10000.0,
         }
 
