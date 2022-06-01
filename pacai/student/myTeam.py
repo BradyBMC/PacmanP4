@@ -131,6 +131,7 @@ class MasterAgent(CaptureAgent):
                 and enemy.getPosition() is not None
                 and enemy.isBraveGhost()
             ):
+                atkDefFlag = False
                 distToEnemy = self.getMazeDistance(myPos, enemy.getPosition())
                 if minenemy > distToEnemy:
                     minenemy = distToEnemy
