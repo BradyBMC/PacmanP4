@@ -71,7 +71,7 @@ class MasterAgent(CaptureAgent):
 
     def getAlly(self, gameState):
         for index in self.getTeam(gameState):
-            if self.index == index:
+            if self.index != index:
                 return index
 
     def atkFeatures(self, gameState, action):
@@ -188,7 +188,7 @@ class MasterAgent(CaptureAgent):
             "deadend": -9999999.0,
             "stop": -400.0,
             "enemyDist": -500.0,
-            "allyDist": -4000.0,
+            "allyDist": -700.0,
             "successorScore": 800.0,
             "distanceToFood": -10.0,
             "scaredDefender": 10000.0,
@@ -256,11 +256,11 @@ class MasterAgent(CaptureAgent):
         features["center"] = 1 / (1 if cornerDist == 0 else cornerDist)
 
         # Pacman avoids being near ally
-        ally = self.getAlly(successor)
-        allyPos = successor.getAgentState(ally).getPosition()
-        allyDist = self.getMazeDistance(myPos, allyPos)
-        allyDist = 0.5 if allyDist == 0 else allyDist
-        features["allyDist"] = 1 / allyDist
+        # ally = self.getAlly(successor)
+        # allyPos = successor.getAgentState(ally).getPosition()
+        # allyDist = self.getMazeDistance(myPos, allyPos)
+        # allyDist = 0.5 if allyDist == 0 else allyDist
+        # features["allyDist"] = 1 / allyDist
 
         # if an enemy ghost is near/camping the mid line then avoid it
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
