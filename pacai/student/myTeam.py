@@ -50,17 +50,17 @@ class MasterAgent(CaptureAgent):
         """
         Computes a linear combination of features and feature weights.
         """
-        ghost = gameState.getAgentState(self.index).isGhost()
+        ghost = gameState.getAgentState(self.index)
         enemies = [gameState.getAgentState(i) for i in self.getOpponents(gameState)]
         enemyPos = [
             a.getPosition()
             for a in enemies
             if (a.isPacman() and a.getPosition() is not None)
         ]
-        if ghost and len(enemyPos) != 0:
+        if ghost.isGhost() and len(enemyPos) != 0 and ghost.isBraveGhost():
             features = self.defFeatures(gameState, action)
             weights = self.getdefWeights(gameState, action)
-        elif ghost and len(enemyPos) == 0:
+        elif ghost.isGhost() and len(enemyPos) == 0:
             features = self.neutralFeatures(gameState, action)
             weights = self.getNeutralWeights(gameState, action)
         else:
@@ -84,14 +84,6 @@ class MasterAgent(CaptureAgent):
         myPos = successor.getAgentState(self.index).getPosition()
         oldPos = gameState.getAgentState(self.index).getPosition()
         foodList = self.getFood(gameState).asList()
-        # newfoodList = self.getFood(successor).asList()
-
-        # Pacman gathers the distance to all food
-        if len(foodList) > 0:
-            minDistance = min([self.getMazeDistance(myPos, food) for food in foodList])
-            features["distanceToFood"] = minDistance
-            if self.getFood(successor).asList() != foodList:
-                features["distanceToFood"] *= -1
 
         # Pacman avoids being near ally
         ally = self.getAlly(successor)
@@ -100,18 +92,35 @@ class MasterAgent(CaptureAgent):
         allyDist = 0.5 if allyDist == 0 else allyDist
         features["allyDist"] = 1 / allyDist
 
+        # Avoid dead ends
+        if len(gameState.getLegalActions(self.index)) <= 2:
+            features["deadend"] = 1.0
+        else:
+            features["deadend"] = 0.0
+
+        # Pacman doesn't stop in enemy territory
+        if oldPos == myPos:
+            features["stop"] = 1
+        else:
+            features["stop"] = 0
+
+        # Pacman gathers the distance to all food
+        if len(foodList) > 0:
+            minDistance = min([self.getMazeDistance(myPos, food) for food in foodList])
+            features["distanceToFood"] = minDistance
+            if self.getFood(successor).asList() != foodList:
+                features["distanceToFood"] *= -1
+
         # dist to enemy feature
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
-        """
-        enemyPos = [a.getPosition() for a in enemies if (a.isGhost() and 
-        a.getPosition() is not None and a.isBraveGhost() is True)]
-        if (len(enemyPos) > 0):
-            minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
-            features['enemyDist'] = 1.0 / minenemy
-        else:
-            minenemy = 99999999999999999.0
-            features['enemyDist'] = minenemy
-        """
+        # enemyPos = [a.getPosition() for a in enemies if (a.isGhost() and 
+        # a.getPosition() is not None and a.isBraveGhost() is True)]
+        # if (len(enemyPos) > 0):
+        #     minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
+        #     features['enemyDist'] = 1.0 / minenemy
+        # else:
+        #     features['enemyDist'] = 0
+
         atkDefFlag = False
         minenemy = 999999.0
         minScaredEnemy = 999999.0
@@ -145,12 +154,6 @@ class MasterAgent(CaptureAgent):
         foodCnt = self.getFood(gameState).count()
         futFoodCnt = successor.getFood().count()
 
-        # Avoid dead ends
-        if len(gameState.getLegalActions(self.index)) <= 2:
-            features["deadend"] = 1.0
-        else:
-            features["deadend"] = 0.0
-
         # distance to enemy ghost
         if minenemy >= 4:
             if foodCnt == futFoodCnt:
@@ -158,28 +161,19 @@ class MasterAgent(CaptureAgent):
             closestFood = 1.0 / closestFood if closestFood != 0 else 0.0  # reciprocal
             features["enemyDist"] = -1.0 * closestFood
 
-        # Pacman doesn't stop in enemy territory
-        if oldPos == myPos:
-            features["stop"] = 1
-        else:
-            features["stop"] = 0
-
         # Pacman distance to powerup pellet
-        oldcapsule = gameState.getCapsules()
-        capsule = successor.getCapsules()
-        if len(capsule) > 0:
-            for cap in capsule:
-                capsuleDist = self.getMazeDistance(myPos, cap)
-                features["capsule"] = 1 / (1 if capsuleDist == 0 else capsuleDist)
-                if capsuleDist <= 3:
-                    features["distanceToFood"] = capsuleDist
-        else:
-            features["capsule"] = 1.0 / 0.1
+        # oldcapsule = gameState.getCapsules()
+        # capsule = successor.getCapsules()
+        # if len(capsule) > 0:
+        #     for cap in capsule:
+        #         capsuleDist = self.getMazeDistance(myPos, cap)
+        #         features["capsule"] = 1 / (1 if capsuleDist == 0 else capsuleDist)
+        # else:
+        #     features["capsule"] = 0
 
-        if oldcapsule > capsule:
-            features["capsule"] = 0
-            features["atecapsule"] = 1
-        # If pacman powered up and ghost nearby, kill ghost
+        # if oldcapsule > capsule:
+        #     features["capsule"] = 1
+        #     features["atecapsule"] = 1
 
         return features
 
@@ -189,12 +183,12 @@ class MasterAgent(CaptureAgent):
         The keys match up with the return from `ReflexCaptureAgent.getFeatures`.
         """
         return {
-            "capsule": 1000.0,
-            "atecapsule": 5000.0,
-            "deadend": -200.0,
-            "stop": -999999.0,
-            "enemyDist": -100000.0,
-            "allyDist": -600.0,
+            "capsule": 1250.0,
+            "atecapsule": 50000.0,
+            "deadend": -99999.0,
+            "stop": -400.0,
+            "enemyDist": -500.0,
+            "allyDist": -4000.0,
             "successorScore": 800.0,
             "distanceToFood": -10.0,
             "scaredDefender": 10000.0,
@@ -204,6 +198,7 @@ class MasterAgent(CaptureAgent):
         features = {}
         successor = self.getSuccessor(gameState, action)
         myPos = successor.getAgentState(self.index).getPosition()
+        oldPos = gameState.getAgentState(self.index).getPosition()
 
         # attack invaders
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
@@ -232,7 +227,6 @@ class MasterAgent(CaptureAgent):
                 features["invDist"] = 0
         else:
             features["invDist"] = 0
-        """
         if successor.getAgentState(self.index).isScaredGhost():
             if len(enemyPos) > 0:
                 minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
@@ -244,14 +238,13 @@ class MasterAgent(CaptureAgent):
                 features["scared"] = 0
         else:
             features["scared"] = 0
-
+        """
         return features
 
     def getdefWeights(self, gameState, action):
         return {
             "invDist": 500.0,
             "numInv": -50000.0,
-            "scared": -10000.0,
             "allyDist": -1000.0,
         }
 
@@ -262,6 +255,13 @@ class MasterAgent(CaptureAgent):
         cornerDist = self.getMazeDistance(self.center(gameState), myPos)
         features["center"] = 1 / (1 if cornerDist == 0 else cornerDist)
 
+        # Pacman avoids being near ally
+        ally = self.getAlly(successor)
+        allyPos = successor.getAgentState(ally).getPosition()
+        allyDist = self.getMazeDistance(myPos, allyPos)
+        allyDist = 0.5 if allyDist == 0 else allyDist
+        features["allyDist"] = 1 / allyDist
+
         # if an enemy ghost is near/camping the mid line then avoid it
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
         enemyPos = [
@@ -269,7 +269,9 @@ class MasterAgent(CaptureAgent):
             for a in enemies
             if (a.isGhost() and a.getPosition() is not None)
         ]
-        if len(enemyPos) > 0 and not successor.getAgentState(self.index).isScared():
+
+        #if len(enemyPos) > 0 and not successor.getAgentState(self.index).isScared():
+        if len(enemyPos) > 0:
             minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
             if minenemy <= 2:
                 features["borderEnemy"] = 99999.0
@@ -278,7 +280,11 @@ class MasterAgent(CaptureAgent):
         return features
 
     def getNeutralWeights(self, gameState, action):
-        return {"center": 1000, "borderEnemy": -5000}
+        return {
+            "center": 1000, 
+            "borderEnemy": -5000,
+            "allyDist": -400
+        }
 
 
 class topAgent(MasterAgent):
@@ -317,7 +323,7 @@ class botAgent(MasterAgent):
         else:
             width -= 2
         last = None
-        for y in range(1, int(height / 4)):
+        for y in range(int(height / 2.5), 1, -1):
             if not gameState.hasWall(width, y):
                 last = (width, y)
         return last
