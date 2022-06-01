@@ -162,18 +162,18 @@ class MasterAgent(CaptureAgent):
             features["enemyDist"] = -1.0 * closestFood
 
         # Pacman distance to powerup pellet
-        # oldcapsule = gameState.getCapsules()
-        # capsule = successor.getCapsules()
-        # if len(capsule) > 0:
-        #     for cap in capsule:
-        #         capsuleDist = self.getMazeDistance(myPos, cap)
-        #         features["capsule"] = 1 / (1 if capsuleDist == 0 else capsuleDist)
-        # else:
-        #     features["capsule"] = 0
+        oldcapsule = gameState.getCapsules()
+        capsule = successor.getCapsules()
+        if len(capsule) > 0:
+            for cap in capsule:
+                capsuleDist = self.getMazeDistance(myPos, cap)
+                features["capsule"] = 1 / (1 if capsuleDist == 0 else capsuleDist)
+        else:
+            features["capsule"] = 0
 
-        # if oldcapsule > capsule:
-        #     features["capsule"] = 1
-        #     features["atecapsule"] = 1
+        if oldcapsule > capsule:
+            features["capsule"] = 1
+            features["atecapsule"] = 1
 
         return features
 
@@ -183,7 +183,7 @@ class MasterAgent(CaptureAgent):
         The keys match up with the return from `ReflexCaptureAgent.getFeatures`.
         """
         return {
-            "capsule": 1250.0,
+            "capsule": 10.0,
             "atecapsule": 50000.0,
             "deadend": -9999999.0,
             "stop": -400.0,
