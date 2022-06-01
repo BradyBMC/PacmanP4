@@ -185,7 +185,7 @@ class MasterAgent(CaptureAgent):
         return {
             "capsule": 1250.0,
             "atecapsule": 50000.0,
-            "deadend": -99999.0,
+            "deadend": -9999999.0,
             "stop": -400.0,
             "enemyDist": -500.0,
             "allyDist": -4000.0,
@@ -301,11 +301,14 @@ class topAgent(MasterAgent):
             width += 2
         else:
             width -= 2
-        last = None
-        for y in range(height - 1, int(height / 3 * 2), -1):
-            if not gameState.hasWall(width, y):
-                last = (width, y)
-        return last
+        first = None
+        for defDiv in range(int(height / 3 * 2), 1, -1):
+            for y in range(height - 1, defDiv, -1):
+                if not gameState.hasWall(width, y):
+                    first = (width, y)
+            if first != None:
+                return first
+        return first
 
 
 class botAgent(MasterAgent):
@@ -323,11 +326,14 @@ class botAgent(MasterAgent):
         else:
             width -= 2
         last = None
-        for y in range(int(height / 2.5), 1, -1):
-            if not gameState.hasWall(width, y):
-                last = (width, y)
+        for x in range(3, 1, -1):
+            defDiv = x - 0.5
+            for y in range(int(height / defDiv), 1, -1):
+                if not gameState.hasWall(width, y):
+                    last = (width, y)
+            if last != None:
+                return last
         return last
-
 
 def createTeam(
     firstIndex,
