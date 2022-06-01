@@ -23,6 +23,7 @@ class MasterAgent(CaptureAgent):
 
         # Your initialization code goes here, if you need any.
         self.wait = True
+        self.last = 'Neutral'
 
     def center(self, gameState):
         pass
@@ -38,9 +39,9 @@ class MasterAgent(CaptureAgent):
 
     def chooseAction(self, gameState):
         actions = gameState.getLegalActions(self.index)
-        for action in actions:
-            if action == "Stop":
-                actions.remove(action)
+        # for action in actions:
+        #     if action == "Stop":
+        #         actions.remove(action)
 
         values = [self.evaluate(gameState, a) for a in actions]
         maxValue = max(values)
@@ -58,15 +59,20 @@ class MasterAgent(CaptureAgent):
             for a in enemies
             if (a.isPacman() and a.getPosition() is not None)
         ]
-        if ghost.isGhost() and len(enemyPos) != 0 and ghost.isBraveGhost():
-            features = self.defFeatures(gameState, action)
-            weights = self.getdefWeights(gameState, action)
-        elif ghost.isGhost() and len(enemyPos) == 0:
+        if ghost.isGhost() and len(enemyPos) == 0:
             features = self.neutralFeatures(gameState, action)
             weights = self.getNeutralWeights(gameState, action)
+            if self.last == 'Attack':
+                self.wait = True
+            self.last = 'Neutral'
+        elif ghost.isGhost() and len(enemyPos) != 0 and ghost.isBraveGhost():
+            features = self.defFeatures(gameState, action)
+            weights = self.getdefWeights(gameState, action)
+            self.last = 'Defense'
         else:
             features = self.atkFeatures(gameState, action)
             weights = self.getatkWeights(gameState, action)
+            self.last = 'Attack'
         stateEval = sum(features[feature] * weights[feature] for feature in features)
         return stateEval
 
@@ -185,7 +191,7 @@ class MasterAgent(CaptureAgent):
         The keys match up with the return from `ReflexCaptureAgent.getFeatures`.
         """
         return {
-            "capsule": 10.0,
+            "capsule": 12.5,
             "atecapsule": 50000.0,
             "deadend": -9999999.0,
             "stop": -400.0,
@@ -213,34 +219,8 @@ class MasterAgent(CaptureAgent):
         if len(enemyPos) > 0 and not successor.getAgentState(self.index).isScared():
             minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
             features["invDist"] = 1 / (1 if minenemy == 0 else minenemy)
-        """
-        if (
-            successor.getAgentState(self.index).isGhost()
-            and successor.getAgentState(self.index).isBraveGhost()
-        ):
-            if len(enemyPos) > 0:
-                minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
-                if minenemy <= 4:
-                    features["invDist"] = minenemy
-                else:
-                    features["invDist"] = 0
-            else:
-                minenemy = 0
-                features["invDist"] = 0
-        else:
-            features["invDist"] = 0
-        if successor.getAgentState(self.index).isScaredGhost():
-            if len(enemyPos) > 0:
-                minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
-                if minenemy <= 4:
-                    features["scared"] = 99999.0
-                else:
-                    features["scared"] = 0
-            else:
-                features["scared"] = 0
-        else:
-            features["scared"] = 0
-        """
+
+        self.wait = False
         return features
 
     def getdefWeights(self, gameState, action):
@@ -258,8 +238,8 @@ class MasterAgent(CaptureAgent):
         centerDist = self.getMazeDistance(center, myPos)
         features["center"] = 1 / (1 if centerDist == 0 else centerDist)
 
-        if self.wait and centerDist <= 1:
-            if action == 'stop':
+        if self.wait and centerDist <= 5:
+            if action == 'Stop':
                 features['stop'] = 1
                 self.wait = False
 
