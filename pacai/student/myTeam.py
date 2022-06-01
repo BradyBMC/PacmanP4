@@ -22,6 +22,7 @@ class MasterAgent(CaptureAgent):
         super().registerInitialState(gameState)
 
         # Your initialization code goes here, if you need any.
+        self.wait = True
 
     def center(self, gameState):
         pass
@@ -252,8 +253,14 @@ class MasterAgent(CaptureAgent):
         features = {}
         successor = self.getSuccessor(gameState, action)
         myPos = successor.getAgentState(self.index).getPosition()
-        cornerDist = self.getMazeDistance(self.center(gameState), myPos)
-        features["center"] = 1 / (1 if cornerDist == 0 else cornerDist)
+        center = self.center(gameState)
+        centerDist = self.getMazeDistance(center, myPos)
+        features["center"] = 1 / (1 if centerDist == 0 else centerDist)
+
+        if self.wait and centerDist <= 1:
+            if action == 'stop':
+                features['stop'] = 1
+                self.wait = False
 
         # Pacman avoids being near ally
         # ally = self.getAlly(successor)
@@ -277,15 +284,16 @@ class MasterAgent(CaptureAgent):
                 features["borderEnemy"] = 99999.0
             else:
                 features["borderEnemy"] = 0.0
+
         return features
 
     def getNeutralWeights(self, gameState, action):
         return {
             "center": 1000, 
             "borderEnemy": -5000,
+            "stop": 999999,
             "allyDist": -400
         }
-
 
 class topAgent(MasterAgent):
     def __init__(self, index, **kwargs):
