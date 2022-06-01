@@ -147,16 +147,25 @@ class MasterAgent(CaptureAgent):
                 and not enemy.isBraveGhost()
             ):
                 distToEnemy = self.getMazeDistance(myPos, enemy.getPosition())
-                if distToEnemy <= 4:
-                    atkDefFlag is True
+                if distToEnemy <= 2:
+                    atkDefFlag = True
                     if distToEnemy < minScaredEnemy:
                         minScaredEnemy = distToEnemy
 
         features["enemyDist"] = 1.0 / minenemy if not atkDefFlag else 0.0
-        features["scaredDefender"] = 1.0 / minScaredEnemy if atkDefFlag else 0.0
+        if atkDefFlag:
+            if minScaredEnemy == 999999.0 or minScaredEnemy == 0:
+                features["scaredDefender"] = 999999.0
+            else:
+                features["scaredDefender"] = 1.0 / minScaredEnemy
+        else:
+            features["scaredDefender"] = 0.0
+
+        """
         features["distanceToFood"] = (
             1.0 / minScaredEnemy if atkDefFlag else features["distanceToFood"]
         )
+        """
 
         closestFood = 999999
         foodCnt = self.getFood(gameState).count()
@@ -164,10 +173,15 @@ class MasterAgent(CaptureAgent):
 
         # distance to enemy ghost
         if minenemy >= 4:
-            if foodCnt == futFoodCnt:
-                closestFood = features["distanceToFood"]
-            closestFood = 1.0 / closestFood if closestFood != 0 else 0.0  # reciprocal
-            features["enemyDist"] = -1.0 * closestFood
+            if atkDefFlag:
+                features["distanceToFood"] = 0.0
+            else:
+                if foodCnt == futFoodCnt:
+                    closestFood = features["distanceToFood"]
+                closestFood = 1.0 / closestFood if closestFood != 0 else 0.0  # reciprocal
+                features["enemyDist"] = -1.0 * closestFood
+
+        # print(features["scaredDefender"], features["enemyDist"], features["distanceToFood"])
 
         # Pacman distance to powerup pellet
         oldcapsule = gameState.getCapsules()
