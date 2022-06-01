@@ -120,7 +120,7 @@ class MasterAgent(CaptureAgent):
 
         # dist to enemy feature
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
-        # enemyPos = [a.getPosition() for a in enemies if (a.isGhost() and 
+        # enemyPos = [a.getPosition() for a in enemies if (a.isGhost() and
         # a.getPosition() is not None and a.isBraveGhost() is True)]
         # if (len(enemyPos) > 0):
         #     minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
@@ -206,7 +206,7 @@ class MasterAgent(CaptureAgent):
         features = {}
         successor = self.getSuccessor(gameState, action)
         myPos = successor.getAgentState(self.index).getPosition()
-        oldPos = gameState.getAgentState(self.index).getPosition()
+        # oldPos = gameState.getAgentState(self.index).getPosition()
 
         # attack invaders
         enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
@@ -258,7 +258,7 @@ class MasterAgent(CaptureAgent):
             if (a.isGhost() and a.getPosition() is not None)
         ]
 
-        #if len(enemyPos) > 0 and not successor.getAgentState(self.index).isScared():
+        # if len(enemyPos) > 0 and not successor.getAgentState(self.index).isScared():
         if len(enemyPos) > 0:
             minenemy = min([self.getMazeDistance(myPos, epos) for epos in enemyPos])
             if minenemy <= 2:
@@ -270,7 +270,7 @@ class MasterAgent(CaptureAgent):
 
     def getNeutralWeights(self, gameState, action):
         return {
-            "center": 1000, 
+            "center": 1000,
             "borderEnemy": -5000,
             "stop": 999999,
             "allyDist": -400
@@ -295,7 +295,7 @@ class topAgent(MasterAgent):
             for y in range(height - 1, defDiv, -1):
                 if not gameState.hasWall(width, y):
                     first = (width, y)
-            if first != None:
+            if first is not None:
                 return first
         return first
 
@@ -320,7 +320,7 @@ class botAgent(MasterAgent):
             for y in range(int(height / defDiv), 1, -1):
                 if not gameState.hasWall(width, y):
                     last = (width, y)
-            if last != None:
+            if last is not None:
                 return last
         return last
 
